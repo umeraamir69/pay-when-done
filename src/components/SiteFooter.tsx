@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
 
 const productLinks = [
@@ -19,11 +22,16 @@ const docsLinks = [
 const accountLinks = [
   { href: "/account", label: "Account" },
   { href: "/settings", label: "Settings" },
-  { href: "/admin", label: "Admin" },
   { href: "/login", label: "Sign in" },
 ];
 
 export function SiteFooter() {
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
+
   return (
     <footer className="site-footer">
       <div className="footer-inner">

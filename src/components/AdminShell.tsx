@@ -1,0 +1,171 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useId, useState } from "react";
+import { BrandMark } from "@/components/BrandMark";
+import { signOut, useSession } from "@/lib/auth-client";
+
+type NavItem = {
+  href: string;
+  label: string;
+  match?: "exact" | "prefix" | "hash";
+};
+
+const consoleNav: NavItem[] = [
+  { href: "/admin#overview", label: "Overview", match: "hash" },
+  { href: "/admin#pipeline", label: "Pipeline", match: "hash" },
+  { href: "/admin#ledger", label: "Ledger", match: "hash" },
+  { href: "/admin#jobs", label: "All jobs", match: "hash" },
+];
+
+const workspaceNav: NavItem[] = [
+  { href: "/jobs", label: "Jobs board", match: "prefix" },
+  { href: "/create", label: "New job", match: "exact" },
+  { href: "/settings", label: "Settings", match: "prefix" },
+  { href: "/notifications", label: "Alerts", match: "prefix" },
+  { href: "/docs", label: "Docs", match: "prefix" },
+];
+
+function isActive(pathname: string, hash: string, item: NavItem) {
+  if (item.match === "hash") {
+    if (pathname !== "/admin") return false;
+    const target = item.href.split("#")[1] || "overview";
+    const current = hash.replace(/^#/, "") || "overview";
+    return current === target;
+  }
+  if (item.match === "exact") return pathname === item.href;
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+export function AdminShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const { data: session } = useSession();
+  const [open, setOpen] = useState(false);
+  const [hash, setHash] = useState("");
+  const titleId = useId();
+
+  useEffect(() => {
+    const sync = () => setHash(window.location.hash);
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname, hash]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  function renderNav(items: NavItem[]) {
+    return items.map((item) => {
+      const active = isActive(pathname, hash, item);
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={active ? "admin-nav-link active" : "admin-nav-link"}
+          aria-current={active ? "page" : undefined}
+          onClick={() => setOpen(false)}
+        >
+          {item.label}
+        </Link>
+      );
+    });
+  }
+
+  return (
+    <div className={`admin-console${open ? " is-drawer-open" : ""}`}>
+      <div className="admin-mobile-bar">
+        <button
+          type="button"
+          className="admin-menu-btn"
+          aria-expanded={open}
+          aria-controls="admin-sidebar"
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span className="admin-menu-icon" aria-hidden="true" />
+          Menu
+        </button>
+        <Link href="/admin" className="admin-mobile-brand">
+          PayWhenDone Admin
+        </Link>
+      </div>
+
+      {open ? (
+        <button
+          type="button"
+          className="admin-drawer-backdrop"
+          aria-label="Close navigation"
+          onClick={() => setOpen(false)}
+        />
+      ) : null}
+
+      <aside
+        id="admin-sidebar"
+        className="admin-sidebar"
+        aria-labelledby={titleId}
+      >
+        <div className="admin-sidebar-top">
+          <Link href="/admin" className="admin-sidebar-brand">
+            <BrandMark size={24} className="admin-sidebar-mark" />
+            <span id={titleId} className="admin-sidebar-product">
+              Operations
+            </span>
+          </Link>
+
+          <nav className="admin-nav" aria-label="Admin console">
+            <p className="admin-nav-label">Console</p>
+            {renderNav(consoleNav)}
+          </nav>
+
+          <nav className="admin-nav" aria-label="Workspace">
+            <p className="admin-nav-label">Workspace</p>
+            {renderNav(workspaceNav)}
+          </nav>
+        </div>
+
+        <div className="admin-sidebar-footer">
+          {session?.user ? (
+            <div className="admin-session">
+              <strong>{session.user.name || "Signed in"}</strong>
+              <span>{session.user.email}</span>
+            </div>
+          ) : (
+            <div className="admin-session">
+              <strong>Session</strong>
+              <span>Loading…</span>
+            </div>
+          )}
+          <div className="admin-sidebar-actions">
+            <Link href="/account" className="admin-nav-link">
+              Account
+            </Link>
+            <Link href="/" className="admin-nav-link">
+              Back to site
+            </Link>
+            <button
+              type="button"
+              className="admin-signout"
+              onClick={() => signOut()}
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <div className="admin-main">
+        <div className="admin-main-inner">{children}</div>
+      </div>
+    </div>
+  );
+}
