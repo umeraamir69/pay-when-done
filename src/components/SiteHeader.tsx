@@ -11,13 +11,16 @@ const links = [
   { href: "/templates", label: "Templates" },
   { href: "/create", label: "New job" },
   { href: "/jobs", label: "Jobs" },
-  { href: "/admin", label: "Admin" },
   { href: "/docs", label: "Docs" },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <header className="site-header">
