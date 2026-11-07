@@ -74,10 +74,13 @@ cp .env.example .env.local
 # set MODEL_API_KEY, BETTER_AUTH_SECRET, PayPal sandbox keys (optional)
 npm install
 npx prisma db push
+npm run db:seed
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+**Local/dev admin seed:** `npm run db:seed` upserts `umer@umer.com` / `umer123123` with a Better Auth credential account. Set `ADMIN_EMAILS=umer@umer.com` (see `.env.example`) so `/admin` is allow-listed to that user.
 
 Without PayPal keys → mock authorize/capture. Without Muse key → mock AI.
 
