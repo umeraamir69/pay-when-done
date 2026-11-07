@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { TopProgressBar } from "@/components/TopProgressBar";
 import "./globals.css";
 
 const display = Fraunces({
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
+        <TopProgressBar />
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />

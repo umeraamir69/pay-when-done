@@ -1678,6 +1678,174 @@ select {
   display: none;
 }
 
+/* —— Top progress + table UX —— */
+.top-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 80;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.top-progress.is-visible {
+  opacity: 1;
+}
+
+.top-progress-bar {
+  height: 100%;
+  width: 28%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform-origin: left center;
+  box-shadow: 0 0 12px rgba(15, 118, 110, 0.35);
+}
+
+.top-progress.is-active .top-progress-bar {
+  animation: top-progress-slide 1.05s ease-in-out infinite;
+}
+
+.top-progress:not(.is-active) .top-progress-bar {
+  width: 100%;
+  transition: width 0.25s ease;
+}
+
+@keyframes top-progress-slide {
+  0% {
+    transform: translateX(-40%);
+    width: 22%;
+  }
+  50% {
+    transform: translateX(140%);
+    width: 42%;
+  }
+  100% {
+    transform: translateX(280%);
+    width: 22%;
+  }
+}
+
+.btn-spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.busy-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.panel-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.table-wrap.is-loading {
+  opacity: 0.62;
+  transition: opacity 0.2s ease;
+}
+
+.sort-th {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.sort-th:hover,
+.sort-th.is-active {
+  color: var(--ink);
+}
+
+.sort-indicator {
+  font-size: 0.7rem;
+  opacity: 0.55;
+}
+
+.sort-th.is-active .sort-indicator {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.85rem;
+}
+
+.pagination-meta {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  padding: 0.4rem 0.8rem !important;
+  font-size: 0.82rem !important;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination-page {
+  font-size: 0.86rem;
+  font-weight: 650;
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+.page-size select {
+  min-width: 0;
+}
+
+.jobs-toolbar {
+  margin-bottom: 1rem;
+}
+
+.jobs-list-shell {
+  display: grid;
+  gap: 0.25rem;
+}
+
 /* —— Templates library —— */
 .sr-only {
   position: absolute;

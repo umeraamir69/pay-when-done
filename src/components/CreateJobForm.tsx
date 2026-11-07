@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import type { JobCategory, JobPriority } from "@/lib/types";
 import { JOB_TEMPLATES, getTemplateById } from "@/lib/templates";
+import { withTopProgress } from "@/lib/top-progress";
+import { BusySpinner } from "@/components/TableControls";
 
 function CreateJobFormInner() {
   const router = useRouter();
@@ -67,14 +69,16 @@ function CreateJobFormInner() {
     };
 
     try {
-      const res = await fetch("/api/jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      await withTopProgress(async () => {
+        const res = await fetch("/api/jobs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to create job");
+        router.push(`/jobs/${data.job.id}`);
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create job");
-      router.push(`/jobs/${data.job.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setLoading(false);
@@ -219,7 +223,7 @@ function CreateJobFormInner() {
       {error ? <p className="error">{error}</p> : null}
 
       <button type="submit" className="btn-primary" disabled={loading}>
-        {loading ? "Creating…" : "Create escrow job"}
+        {loading ? <BusySpinner label="Creating…" /> : "Create escrow job"}
       </button>
     </form>
   );

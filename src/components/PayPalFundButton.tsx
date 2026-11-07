@@ -6,6 +6,8 @@ import {
 } from "@paypal/react-paypal-js";
 import { useEffect, useState } from "react";
 import type { Job } from "@/lib/types";
+import { withTopProgress } from "@/lib/top-progress";
+import { BusySpinner } from "@/components/TableControls";
 
 type Props = {
   job: Job;
@@ -32,20 +34,22 @@ export function PayPalFundButton({ job, onFunded }: Props) {
     setBusy(true);
     setError(null);
     try {
-      const createRes = await fetch(`/api/jobs/${job.id}/create-order`, {
-        method: "POST",
-      });
-      const createData = await createRes.json();
-      if (!createRes.ok) throw new Error(createData.error || "Order failed");
+      await withTopProgress(async () => {
+        const createRes = await fetch(`/api/jobs/${job.id}/create-order`, {
+          method: "POST",
+        });
+        const createData = await createRes.json();
+        if (!createRes.ok) throw new Error(createData.error || "Order failed");
 
-      const authRes = await fetch(`/api/jobs/${job.id}/authorize`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: createData.orderId }),
+        const authRes = await fetch(`/api/jobs/${job.id}/authorize`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: createData.orderId }),
+        });
+        const authData = await authRes.json();
+        if (!authRes.ok) throw new Error(authData.error || "Authorize failed");
+        onFunded(authData.job);
       });
-      const authData = await authRes.json();
-      if (!authRes.ok) throw new Error(authData.error || "Authorize failed");
-      onFunded(authData.job);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Mock funding failed");
     } finally {
@@ -73,7 +77,11 @@ export function PayPalFundButton({ job, onFunded }: Props) {
           onClick={fundWithMock}
           disabled={busy}
         >
-          {busy ? "Holding funds…" : `Hold ${job.amount} ${job.currency} (mock)`}
+          {busy ? (
+            <BusySpinner label="Holding funds…" />
+          ) : (
+            `Hold ${job.amount} ${job.currency} (mock)`
+          )}
         </button>
       </div>
     );
