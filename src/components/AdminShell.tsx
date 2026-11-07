@@ -3,20 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useState } from "react";
-import { BrandMark } from "@/components/BrandMark";
 import { signOut, useSession } from "@/lib/auth-client";
 
 type NavItem = {
   href: string;
   label: string;
-  match?: "exact" | "prefix" | "hash";
+  match?: "exact" | "prefix";
 };
 
 const consoleNav: NavItem[] = [
-  { href: "/admin#overview", label: "Overview", match: "hash" },
-  { href: "/admin#pipeline", label: "Pipeline", match: "hash" },
-  { href: "/admin#ledger", label: "Ledger", match: "hash" },
-  { href: "/admin#jobs", label: "All jobs", match: "hash" },
+  { href: "/admin", label: "Dashboard", match: "exact" },
+  { href: "/admin/jobs", label: "Jobs", match: "prefix" },
+  { href: "/admin/ledger", label: "Ledger", match: "prefix" },
+  { href: "/admin/invoices", label: "Invoices", match: "prefix" },
+  { href: "/admin/payouts", label: "Payouts", match: "prefix" },
+  { href: "/admin/webhooks", label: "Webhooks", match: "prefix" },
 ];
 
 const workspaceNav: NavItem[] = [
@@ -27,13 +28,7 @@ const workspaceNav: NavItem[] = [
   { href: "/docs", label: "Docs", match: "prefix" },
 ];
 
-function isActive(pathname: string, hash: string, item: NavItem) {
-  if (item.match === "hash") {
-    if (pathname !== "/admin") return false;
-    const target = item.href.split("#")[1] || "overview";
-    const current = hash.replace(/^#/, "") || "overview";
-    return current === target;
-  }
+function isActive(pathname: string, item: NavItem) {
   if (item.match === "exact") return pathname === item.href;
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
@@ -42,19 +37,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
-  const [hash, setHash] = useState("");
   const titleId = useId();
 
   useEffect(() => {
-    const sync = () => setHash(window.location.hash);
-    sync();
-    window.addEventListener("hashchange", sync);
-    return () => window.removeEventListener("hashchange", sync);
-  }, []);
-
-  useEffect(() => {
     setOpen(false);
-  }, [pathname, hash]);
+  }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
@@ -67,7 +54,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   function renderNav(items: NavItem[]) {
     return items.map((item) => {
-      const active = isActive(pathname, hash, item);
+      const active = isActive(pathname, item);
       return (
         <Link
           key={item.href}
@@ -116,7 +103,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       >
         <div className="admin-sidebar-top">
           <Link href="/admin" className="admin-sidebar-brand">
-            <BrandMark size={24} className="admin-sidebar-mark" />
+            <span className="admin-sidebar-mark">PayWhenDone</span>
             <span id={titleId} className="admin-sidebar-product">
               Operations
             </span>
@@ -146,9 +133,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </div>
           )}
           <div className="admin-sidebar-actions">
-            <Link href="/account" className="admin-nav-link">
-              Account
-            </Link>
             <Link href="/" className="admin-nav-link">
               Back to site
             </Link>
