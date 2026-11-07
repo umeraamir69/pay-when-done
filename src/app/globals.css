@@ -1559,15 +1559,50 @@ select {
   font-size: 2.2rem;
 }
 
+.auth-submit,
 .auth-passkey {
   width: 100%;
   margin-top: 0.15rem;
 }
 
-.auth-passkey-hint {
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.45;
+.auth-email-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.auth-email-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.auth-email-chip button {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 650;
+  cursor: pointer;
+  padding: 0;
+}
+
+.auth-email-chip button:hover:not(:disabled) {
+  color: var(--bg-deep);
+}
+
+.auth-email-chip button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .auth-divider {
@@ -1607,6 +1642,25 @@ select {
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
   gap: 1rem;
+}
+
+.passkey-setup-banner {
+  grid-column: 1 / -1;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.passkey-setup-skip {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.passkey-panel-highlight {
+  outline: 2px solid rgba(15, 118, 110, 0.35);
+  outline-offset: 2px;
 }
 
 .passkey-list {

@@ -6,6 +6,8 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
 type Mode = "login" | "signup";
+/** Login: email → then password and/or passkey depending on account */
+type LoginStep = "email" | "auth";
 
 /** Only started after an explicit passkey click — never on mount. */
 const PASSKEY_TIMEOUT_MS = 60_000;
@@ -18,27 +20,45 @@ function isAbortError(err: unknown) {
   );
 }
 
+function passkeyErrorMessage(err: unknown) {
+  const raw =
+    err instanceof Error
+      ? err.message
+      : typeof err === "string"
+        ? err
+        : "Passkey sign-in failed";
+  const lower = raw.toLowerCase();
+  if (
+    lower.includes("abort") ||
+    lower.includes("cancel") ||
+    lower.includes("not allowed") ||
+    lower.includes("timed out") ||
+    lower.includes("timeout")
+  ) {
+    return "Passkey cancelled or timed out. Use your password instead.";
+  }
+  return raw || "Passkey sign-in failed";
+}
+
 export function AuthPanel({ mode }: { mode: Mode }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loginStep, setLoginStep] = useState<LoginStep>("email");
+  const [hasPasskey, setHasPasskey] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-  /** Passkey errors are isolated so email flow never inherits them. */
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
 
   const mountedRef = useRef(true);
   const passkeyAttemptRef = useRef(0);
   const passkeyAbortRef = useRef<AbortController | null>(null);
 
-  // Clear sticky error/info from prior visits / remounts. Never start WebAuthn here.
   useEffect(() => {
     mountedRef.current = true;
     setError(null);
-    setInfo(null);
     setPasskeyError(null);
     setBusy(null);
 
@@ -56,13 +76,50 @@ export function AuthPanel({ mode }: { mode: Mode }) {
     passkeyAbortRef.current = null;
   }
 
+  async function checkPasskeyStatus(nextEmail: string) {
+    const res = await fetch("/api/auth/passkey-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: nextEmail }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      hasPasskey?: boolean;
+    };
+    return Boolean(data.hasPasskey);
+  }
+
+  async function onContinueEmail(e: FormEvent) {
+    e.preventDefault();
+    abortPasskeyAttempt();
+    setError(null);
+    setPasskeyError(null);
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed.includes("@")) {
+      setError("Enter a valid email to continue.");
+      return;
+    }
+    setBusy("lookup");
+    try {
+      const found = await checkPasskeyStatus(trimmed);
+      if (!mountedRef.current) return;
+      setEmail(trimmed);
+      setHasPasskey(found);
+      setLoginStep("auth");
+    } catch {
+      if (!mountedRef.current) return;
+      setHasPasskey(false);
+      setLoginStep("auth");
+    } finally {
+      if (mountedRef.current) setBusy(null);
+    }
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     abortPasskeyAttempt();
     setBusy("form");
     setError(null);
     setPasskeyError(null);
-    setInfo(null);
 
     if (mode === "signup" && password !== confirmPassword) {
       setError("Passwords do not match");
@@ -78,8 +135,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
           name: name || email.split("@")[0],
         });
         if (err) throw new Error(err.message || "Sign up failed");
-        setInfo("Account created. Optional: add a passkey from Account.");
-        router.push("/account");
+        router.push("/account?setup=passkey");
         router.refresh();
         return;
       }
@@ -89,7 +145,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         password,
       });
       if (err) throw new Error(err.message || "Sign in failed");
-      router.push("/jobs");
+      router.push(hasPasskey ? "/jobs" : "/account?setup=passkey");
       router.refresh();
     } catch (err) {
       if (!mountedRef.current) return;
@@ -110,7 +166,6 @@ export function AuthPanel({ mode }: { mode: Mode }) {
     setBusy("passkey");
     setError(null);
     setPasskeyError(null);
-    setInfo(null);
 
     const timeoutId = window.setTimeout(() => {
       ac.abort();
@@ -143,10 +198,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
       if (!stillCurrent()) return;
 
       if (err) {
-        setPasskeyError(
-          err.message ||
-            "Passkey sign-in failed. Sign in with email, then add a passkey from Account.",
-        );
+        setPasskeyError(passkeyErrorMessage(err.message || err));
         return;
       }
 
@@ -156,17 +208,11 @@ export function AuthPanel({ mode }: { mode: Mode }) {
       if (!stillCurrent()) return;
 
       if (isAbortError(err) || ac.signal.aborted) {
-        setPasskeyError(
-          "Passkey cancelled or timed out. Sign in with email instead, then add a passkey from Account.",
-        );
+        setPasskeyError("Passkey cancelled or timed out. Use your password instead.");
         return;
       }
 
-      setPasskeyError(
-        err instanceof Error
-          ? err.message
-          : "Passkey failed — register one from Account after email login",
-      );
+      setPasskeyError(passkeyErrorMessage(err));
     } finally {
       window.clearTimeout(timeoutId);
       if (passkeyAbortRef.current === ac) {
@@ -175,6 +221,17 @@ export function AuthPanel({ mode }: { mode: Mode }) {
       if (stillCurrent()) setBusy(null);
     }
   }
+
+  function changeEmail() {
+    abortPasskeyAttempt();
+    setLoginStep("email");
+    setHasPasskey(false);
+    setPassword("");
+    setError(null);
+    setPasskeyError(null);
+  }
+
+  const loginEmailStep = mode === "login" && loginStep === "email";
 
   return (
     <div className="auth-shell">
@@ -185,105 +242,144 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         <h1>{mode === "login" ? "Sign in" : "Sign up"}</h1>
         <p className="muted">
           {mode === "login"
-            ? "Sign in with email and password. Passkey is only for return visits after you add one on Account."
-            : "Create an account with email. Add Face ID / Touch ID later from Account if you want."}
+            ? loginEmailStep
+              ? "Enter your email to continue."
+              : hasPasskey
+                ? "Use your passkey, or sign in with password."
+                : "Enter your password to continue."
+            : "Create an account with email and password."}
         </p>
 
-        <form className="panel-form" onSubmit={onSubmit}>
-          {mode === "signup" ? (
+        {loginEmailStep ? (
+          <form className="panel-form" onSubmit={onContinueEmail}>
             <label>
-              Name
+              Email
               <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Alex Rivera"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={busy !== null}
+                autoFocus
               />
             </label>
-          ) : null}
-          <label>
-            Email
-            <input
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+            {error ? <p className="error">{error}</p> : null}
+            <button
+              type="submit"
+              className="btn-primary auth-submit"
               disabled={busy !== null}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              autoComplete={
-                mode === "login" ? "current-password" : "new-password"
-              }
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={8}
-              required
-              disabled={busy !== null}
-            />
-          </label>
-          {mode === "signup" ? (
+            >
+              {busy === "lookup" ? "Checking…" : "Continue"}
+            </button>
+          </form>
+        ) : (
+          <form className="panel-form" onSubmit={onSubmit}>
+            {mode === "signup" ? (
+              <label>
+                Name
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Alex Rivera"
+                  required
+                  disabled={busy !== null}
+                />
+              </label>
+            ) : null}
+
+            {mode === "login" ? (
+              <div className="auth-email-chip">
+                <span>{email}</span>
+                <button
+                  type="button"
+                  onClick={changeEmail}
+                  disabled={busy !== null}
+                >
+                  Change
+                </button>
+              </div>
+            ) : (
+              <label>
+                Email
+                <input
+                  type="email"
+                  autoComplete="username"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={busy !== null}
+                />
+              </label>
+            )}
+
+            {mode === "login" && hasPasskey ? (
+              <>
+                <button
+                  type="button"
+                  className="btn-primary auth-submit"
+                  onClick={signInWithPasskey}
+                  disabled={busy !== null}
+                >
+                  {busy === "passkey"
+                    ? "Waiting for authenticator…"
+                    : "Continue with passkey"}
+                </button>
+                {passkeyError ? <p className="error">{passkeyError}</p> : null}
+                <div className="auth-divider">
+                  <span>or password</span>
+                </div>
+              </>
+            ) : null}
+
             <label>
-              Confirm password
+              Password
               <input
                 type="password"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 minLength={8}
                 required
                 disabled={busy !== null}
+                autoFocus={mode === "login" && !hasPasskey}
               />
             </label>
-          ) : null}
+            {mode === "signup" ? (
+              <label>
+                Confirm password
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={8}
+                  required
+                  disabled={busy !== null}
+                />
+              </label>
+            ) : null}
 
-          {error ? <p className="error">{error}</p> : null}
-          {info ? <p className="banner">{info}</p> : null}
+            {error ? <p className="error">{error}</p> : null}
 
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={busy !== null}
-          >
-            {busy === "form"
-              ? "Please wait…"
-              : mode === "login"
-                ? "Sign in with email"
-                : "Create account"}
-          </button>
-        </form>
-
-        {mode === "login" ? (
-          <>
-            <div className="auth-divider">
-              <span>or return with passkey</span>
-            </div>
             <button
-              type="button"
-              className="btn-ghost auth-passkey"
-              onClick={signInWithPasskey}
+              type="submit"
+              className={
+                mode === "login" && hasPasskey
+                  ? "btn-ghost auth-submit"
+                  : "btn-primary auth-submit"
+              }
               disabled={busy !== null}
             >
-              {busy === "passkey"
-                ? "Waiting for authenticator… (cancel if stuck)"
-                : "Continue with passkey"}
+              {busy === "form"
+                ? "Please wait…"
+                : mode === "login"
+                  ? "Sign in with password"
+                  : "Create account"}
             </button>
-            {passkeyError ? <p className="error">{passkeyError}</p> : null}
-            <p className="muted auth-passkey-hint">
-              Only after you add a passkey on{" "}
-              <Link href="/account">Account</Link>. New here? Use email first.
-            </p>
-          </>
-        ) : (
-          <p className="muted auth-passkey-hint">
-            After signup, open Account to register a passkey for one-tap return
-            visits. Passkeys are not created during signup.
-          </p>
+          </form>
         )}
 
         <p className="auth-switch muted">

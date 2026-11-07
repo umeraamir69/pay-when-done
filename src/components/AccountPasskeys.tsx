@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authClient, useSession } from "@/lib/auth-client";
 
 type PasskeyRow = {
@@ -11,14 +11,17 @@ type PasskeyRow = {
   deviceType?: string;
 };
 
-export function AccountPasskeys() {
+function AccountPasskeysInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const setupPasskey = searchParams.get("setup") === "passkey";
   const { data: session, isPending } = useSession();
   const [passkeys, setPasskeys] = useState<PasskeyRow[]>([]);
   const [name, setName] = useState("This device");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [showSetupNudge, setShowSetupNudge] = useState(setupPasskey);
 
   async function refresh() {
     const { data, error: err } = await authClient.passkey.listUserPasskeys();
@@ -32,6 +35,17 @@ export function AccountPasskeys() {
   useEffect(() => {
     if (session) refresh().catch(console.error);
   }, [session]);
+
+  useEffect(() => {
+    setShowSetupNudge(setupPasskey);
+  }, [setupPasskey]);
+
+  function dismissSetupNudge() {
+    setShowSetupNudge(false);
+    if (setupPasskey) {
+      router.replace("/account");
+    }
+  }
 
   async function addPasskey() {
     setBusy(true);
@@ -53,9 +67,11 @@ export function AccountPasskeys() {
       if (result?.error) {
         throw new Error(result.error.message || "Could not add passkey");
       }
-      setInfo(
-        "Passkey saved. On your next visit, use Continue with passkey on the login page.",
-      );
+      setInfo("Passkey saved. You can use it next time you sign in.");
+      setShowSetupNudge(false);
+      if (setupPasskey) {
+        router.replace("/account");
+      }
       await refresh();
     } catch (err) {
       const message =
@@ -69,7 +85,7 @@ export function AccountPasskeys() {
         lower.includes("timeout")
       ) {
         setError(
-          "Passkey cancelled or timed out. Email/password still works — try again when ready.",
+          "Passkey cancelled or timed out. You can try again anytime.",
         );
       } else {
         setError(message);
@@ -115,8 +131,26 @@ export function AccountPasskeys() {
     );
   }
 
+  const needsPasskey = showSetupNudge && passkeys.length === 0;
+
   return (
     <div className="account-grid">
+      {needsPasskey ? (
+        <div className="banner passkey-setup-banner" role="status">
+          <div>
+            <strong>Add a passkey?</strong> Optional — next sign-in can use Face
+            ID / Touch ID. Password still works if you skip.
+          </div>
+          <button
+            type="button"
+            className="btn-ghost passkey-setup-skip"
+            onClick={dismissSetupNudge}
+          >
+            Not now
+          </button>
+        </div>
+      ) : null}
+
       <article className="panel reveal">
         <h2>Profile</h2>
         <p>
@@ -128,11 +162,12 @@ export function AccountPasskeys() {
         </button>
       </article>
 
-      <article className="panel reveal delay-1">
+      <article
+        className={`panel reveal delay-1${needsPasskey ? " passkey-panel-highlight" : ""}`}
+      >
         <h2>Passkeys</h2>
         <p className="muted">
-          Optional. Add Face ID / Touch ID / Windows Hello here after you are
-          signed in. Next visit, use Continue with passkey on the login page.
+          Optional Face ID / Touch ID / Windows Hello for faster return visits.
         </p>
 
         {error ? <p className="error">{error}</p> : null}
@@ -176,5 +211,13 @@ export function AccountPasskeys() {
         </button>
       </article>
     </div>
+  );
+}
+
+export function AccountPasskeys() {
+  return (
+    <Suspense fallback={<p className="muted">Loading session…</p>}>
+      <AccountPasskeysInner />
+    </Suspense>
   );
 }
