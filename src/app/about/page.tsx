@@ -142,28 +142,39 @@ export default function AboutPage() {
       </section>
 
       <section className="about-section about-builder">
-        <p className="eyebrow">Builder</p>
-        <h2>Built by Muhammad Umer Aamir</h2>
-        <p className="lede narrow">
-          Solo build for the PayPal AI Hackathon — escrow money rails, Muse
-          verification, passkeys, and durable job state in one app.
+        <p className="eyebrow">Built by</p>
+        <h2>Muhammad Umer Aamir</h2>
+        <p className="muted about-section-lede">
+          MAC student at Wilfrid Laurier in the Brantford / Waterloo area. I
+          ship full-stack work in TypeScript and Next.js — from security tools
+          like SecSentry to ApplySafe for Canadian job-scam checks. PayWhenDone
+          is my PayPal AI Hackathon entry: sandbox escrow rails, Muse
+          verification, and passkeys in one working demo.
         </p>
         <div className="cta-row section-cta">
           <a
-            href="https://github.com/umeraamir69"
+            href="https://github.com/umeraamir69/pay-when-done"
             className="btn-primary"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
-            GitHub · umeraamir69
+            GitHub repo
           </a>
           <a
-            href="https://github.com/umeraamir69/pay-when-done"
+            href="https://github.com/umeraamir69"
             className="btn-ghost"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
-            Project repo
+            Profile
+          </a>
+          <a
+            href="https://www.linkedin.com/in/umeraamir69/"
+            className="btn-ghost"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            LinkedIn
           </a>
         </div>
       </section>
