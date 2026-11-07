@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
+import { BrandMark } from "@/components/BrandMark";
 
 const links = [
   { href: "/how-it-works", label: "How it works" },
@@ -19,8 +20,8 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <Link href="/" className="brand">
-        PayWhenDone
+      <Link href="/" className="brand-link" aria-label="PayWhenDone home">
+        <BrandMark />
       </Link>
       <nav>
         {links.map((link) => (
