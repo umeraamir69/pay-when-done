@@ -2,32 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
 type Mode = "login" | "signup";
 
-function passkeyErrorMessage(err: unknown) {
-  const raw =
-    err instanceof Error
-      ? err.message
-      : typeof err === "string"
-        ? err
-        : "Passkey failed";
-  const lower = raw.toLowerCase();
-  if (
-    lower.includes("abort") ||
-    lower.includes("cancel") ||
-    lower.includes("not allowed") ||
-    lower.includes("timed out") ||
-    lower.includes("timeout")
-  ) {
-    return "Passkey cancelled or timed out. Sign in with email instead, then add a passkey from Account.";
-  }
-  if (lower.includes("credential") || lower.includes("no passkey")) {
-    return "No passkey on this device yet. Sign in with email, open Account, then tap Add passkey.";
-  }
-  return `${raw}. Tip: use email first, then register a passkey on Account.`;
+/** Only started after an explicit passkey click — never on mount. */
+const PASSKEY_TIMEOUT_MS = 60_000;
+
+function isAbortError(err: unknown) {
+  return (
+    (err instanceof DOMException && err.name === "AbortError") ||
+    (err instanceof Error &&
+      (err.name === "AbortError" || /abort|cancel/i.test(err.message)))
+  );
 }
 
 export function AuthPanel({ mode }: { mode: Mode }) {
@@ -39,18 +27,49 @@ export function AuthPanel({ mode }: { mode: Mode }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  /** Passkey errors are isolated so email flow never inherits them. */
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+
+  const mountedRef = useRef(true);
+  const passkeyAttemptRef = useRef(0);
+  const passkeyAbortRef = useRef<AbortController | null>(null);
+
+  // Clear sticky error/info from prior visits / remounts. Never start WebAuthn here.
+  useEffect(() => {
+    mountedRef.current = true;
+    setError(null);
+    setInfo(null);
+    setPasskeyError(null);
+    setBusy(null);
+
+    return () => {
+      mountedRef.current = false;
+      passkeyAttemptRef.current += 1;
+      passkeyAbortRef.current?.abort();
+      passkeyAbortRef.current = null;
+    };
+  }, []);
+
+  function abortPasskeyAttempt() {
+    passkeyAttemptRef.current += 1;
+    passkeyAbortRef.current?.abort();
+    passkeyAbortRef.current = null;
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    abortPasskeyAttempt();
+    setBusy("form");
     setError(null);
+    setPasskeyError(null);
     setInfo(null);
 
     if (mode === "signup" && password !== confirmPassword) {
-      setError("Passwords do not match. Please confirm your password.");
+      setError("Passwords do not match");
+      setBusy(null);
       return;
     }
 
-    setBusy("form");
     try {
       if (mode === "signup") {
         const { error: err } = await authClient.signUp.email({
@@ -73,39 +92,87 @@ export function AuthPanel({ mode }: { mode: Mode }) {
       router.push("/jobs");
       router.refresh();
     } catch (err) {
+      if (!mountedRef.current) return;
       setError(err instanceof Error ? err.message : "Auth failed");
     } finally {
-      setBusy(null);
+      if (mountedRef.current) setBusy(null);
     }
   }
 
   async function signInWithPasskey() {
+    const attemptId = passkeyAttemptRef.current + 1;
+    passkeyAttemptRef.current = attemptId;
+    passkeyAbortRef.current?.abort();
+
+    const ac = new AbortController();
+    passkeyAbortRef.current = ac;
+
     setBusy("passkey");
     setError(null);
-    setInfo("Touch your security key / approve Face ID or Touch ID…");
+    setPasskeyError(null);
+    setInfo(null);
 
-    const timeoutMs = 45_000;
-    const timeout = new Promise<never>((_, reject) => {
-      window.setTimeout(() => {
-        reject(new Error("Passkey timed out"));
-      }, timeoutMs);
-    });
+    const timeoutId = window.setTimeout(() => {
+      ac.abort();
+    }, PASSKEY_TIMEOUT_MS);
+
+    const stillCurrent = () =>
+      mountedRef.current && passkeyAttemptRef.current === attemptId;
 
     try {
-      const result = await Promise.race([
-        authClient.signIn.passkey({}),
-        timeout,
+      const passkeyPromise = authClient.signIn.passkey({
+        // Explicit modal ceremony only — no conditional / autofill WebAuthn.
+        autoFill: false,
+      });
+
+      const abortPromise = new Promise<never>((_, reject) => {
+        const onAbort = () =>
+          reject(new DOMException("Passkey aborted", "AbortError"));
+        if (ac.signal.aborted) {
+          onAbort();
+          return;
+        }
+        ac.signal.addEventListener("abort", onAbort, { once: true });
+      });
+
+      const { error: err } = await Promise.race([
+        passkeyPromise,
+        abortPromise,
       ]);
-      if (result?.error) {
-        throw new Error(result.error.message || "Passkey sign-in failed");
+
+      if (!stillCurrent()) return;
+
+      if (err) {
+        setPasskeyError(
+          err.message ||
+            "Passkey sign-in failed. Sign in with email, then add a passkey from Account.",
+        );
+        return;
       }
+
       router.push("/jobs");
       router.refresh();
     } catch (err) {
-      setInfo(null);
-      setError(passkeyErrorMessage(err));
+      if (!stillCurrent()) return;
+
+      if (isAbortError(err) || ac.signal.aborted) {
+        setPasskeyError(
+          "Passkey cancelled or timed out. Sign in with email instead, then add a passkey from Account.",
+        );
+        return;
+      }
+
+      setPasskeyError(
+        err instanceof Error
+          ? err.message
+          : "Passkey failed — register one from Account after email login",
+      );
     } finally {
-      setBusy(null);
+      window.clearTimeout(timeoutId);
+      if (passkeyAbortRef.current === ac) {
+        passkeyAbortRef.current = null;
+      }
+      if (stillCurrent()) setBusy(null);
     }
   }
 
@@ -206,6 +273,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
                 ? "Waiting for authenticator… (cancel if stuck)"
                 : "Continue with passkey"}
             </button>
+            {passkeyError ? <p className="error">{passkeyError}</p> : null}
             <p className="muted auth-passkey-hint">
               Only after you add a passkey on{" "}
               <Link href="/account">Account</Link>. New here? Use email first.
