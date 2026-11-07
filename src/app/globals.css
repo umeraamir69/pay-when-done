@@ -1882,27 +1882,133 @@ select {
   }
 }
 
-/* Auth */
+/* Auth — split showcase + form */
 .auth-shell {
+  position: relative;
   min-height: calc(100vh - 140px);
   display: grid;
-  place-items: center;
-  padding: 2rem 1.5rem 3rem;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  gap: 2.5rem;
+  align-items: center;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 2.5rem 1.75rem 3.25rem;
+}
+
+.auth-showcase {
+  color: #f4fffa;
+  background:
+    linear-gradient(155deg, rgba(12, 36, 32, 0.96), rgba(15, 118, 110, 0.82));
+  border-radius: 1.35rem;
+  padding: 2rem 1.85rem;
+  min-height: 28rem;
+  display: grid;
+  gap: 1.15rem;
+  align-content: start;
+  box-shadow: var(--shadow);
+}
+
+.auth-showcase-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.85rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.auth-showcase-lede {
+  margin: 0;
+  max-width: 28rem;
+  line-height: 1.55;
+  opacity: 0.88;
+  font-size: 1.02rem;
+}
+
+.auth-pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  margin: 0.35rem 0;
+}
+
+.auth-pipeline i {
+  width: 1.25rem;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  display: inline-block;
+}
+
+.auth-pipeline .accent {
+  color: var(--accent-2);
+}
+
+.auth-highlights {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.auth-highlights li {
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.auth-highlights strong {
+  font-size: 0.98rem;
+}
+
+.auth-highlights span {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  line-height: 1.45;
+}
+
+.auth-showcase-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.auth-showcase-footer a {
+  opacity: 0.85;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-showcase-footer a:hover {
+  opacity: 1;
 }
 
 .auth-card {
-  width: min(460px, 100%);
+  width: 100%;
+  max-width: 440px;
+  justify-self: end;
   display: grid;
-  gap: 0.85rem;
+  gap: 0.9rem;
 }
 
 .auth-card h1 {
   margin: 0.15rem 0;
   font-family: var(--font-display);
   letter-spacing: -0.03em;
-  font-size: 2.2rem;
+  font-size: clamp(1.9rem, 3vw, 2.35rem);
 }
 
+.auth-card-lede {
+  margin: 0;
+}
+
+.auth-submit,
 .auth-passkey {
   width: 100%;
   margin-top: 0.15rem;
@@ -1912,6 +2018,50 @@ select {
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.45;
+}
+
+.auth-email-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.95rem;
+}
+
+.auth-email-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.auth-email-chip button {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 650;
+  cursor: pointer;
+  padding: 0.15rem 0.25rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-email-chip button:hover:not(:disabled) {
+  color: var(--bg-deep);
+}
+
+.auth-email-chip button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+
 }
 
 .auth-divider {
@@ -1947,10 +2097,48 @@ select {
   text-decoration: underline;
 }
 
+@media (max-width: 900px) {
+  .auth-shell {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem 1.25rem 2.5rem;
+  }
+
+  .auth-showcase {
+    min-height: 0;
+    padding: 1.5rem 1.35rem;
+  }
+
+  .auth-card {
+    justify-self: stretch;
+    max-width: none;
+  }
+}
+
 .account-grid {
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
   gap: 1rem;
+}
+
+.passkey-setup-banner {
+  grid-column: 1 / -1;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.passkey-setup-skip {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.passkey-panel-highlight {
+  outline: 2px solid rgba(15, 118, 110, 0.35);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(15, 118, 110, 0.08);
 }
 
 .passkey-list {
