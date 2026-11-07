@@ -1,13 +1,14 @@
-// PayWhenDone — SQLite for local/dev.
-// For production, switch provider to "postgresql" and set DATABASE_URL to Neon/Supabase.
+// PayWhenDone — Neon Postgres (Vercel Marketplace).
+// DATABASE_URL: pooled. DATABASE_URL_UNPOOLED: migrate/push (directUrl).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 // ─── Better Auth ───────────────────────────────────────────

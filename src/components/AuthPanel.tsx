@@ -7,6 +7,29 @@ import { authClient } from "@/lib/auth-client";
 
 type Mode = "login" | "signup";
 
+function passkeyErrorMessage(err: unknown) {
+  const raw =
+    err instanceof Error
+      ? err.message
+      : typeof err === "string"
+        ? err
+        : "Passkey failed";
+  const lower = raw.toLowerCase();
+  if (
+    lower.includes("abort") ||
+    lower.includes("cancel") ||
+    lower.includes("not allowed") ||
+    lower.includes("timed out") ||
+    lower.includes("timeout")
+  ) {
+    return "Passkey cancelled or timed out. Sign in with email instead, then add a passkey from Account.";
+  }
+  if (lower.includes("credential") || lower.includes("no passkey")) {
+    return "No passkey on this device yet. Sign in with email, open Account, then tap Add passkey.";
+  }
+  return `${raw}. Tip: use email first, then register a passkey on Account.`;
+}
+
 export function AuthPanel({ mode }: { mode: Mode }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -36,7 +59,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
           name: name || email.split("@")[0],
         });
         if (err) throw new Error(err.message || "Sign up failed");
-        setInfo("Account created. Register a passkey next for one-tap login.");
+        setInfo("Account created. Optional: add a passkey from Account.");
         router.push("/account");
         router.refresh();
         return;
@@ -47,7 +70,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         password,
       });
       if (err) throw new Error(err.message || "Sign in failed");
-      router.push("/admin");
+      router.push("/jobs");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Auth failed");
@@ -59,19 +82,28 @@ export function AuthPanel({ mode }: { mode: Mode }) {
   async function signInWithPasskey() {
     setBusy("passkey");
     setError(null);
+    setInfo("Touch your security key / approve Face ID or Touch ID…");
+
+    const timeoutMs = 45_000;
+    const timeout = new Promise<never>((_, reject) => {
+      window.setTimeout(() => {
+        reject(new Error("Passkey timed out"));
+      }, timeoutMs);
+    });
+
     try {
-      const { error: err } = await authClient.signIn.passkey({
-        autoFill: true,
-      });
-      if (err) throw new Error(err.message || "Passkey sign-in failed");
-      router.push("/admin");
+      const result = await Promise.race([
+        authClient.signIn.passkey({}),
+        timeout,
+      ]);
+      if (result?.error) {
+        throw new Error(result.error.message || "Passkey sign-in failed");
+      }
+      router.push("/jobs");
       router.refresh();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Passkey failed — register one from Account after email login",
-      );
+      setInfo(null);
+      setError(passkeyErrorMessage(err));
     } finally {
       setBusy(null);
     }
@@ -85,22 +117,10 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         </p>
         <h1>{mode === "login" ? "Sign in" : "Sign up"}</h1>
         <p className="muted">
-          Use email once, then register a passkey (Touch ID / Face ID / Windows
-          Hello) for passwordless login every time.
+          {mode === "login"
+            ? "Sign in with email and password. Passkey is only for return visits after you add one on Account."
+            : "Create an account with email. Add Face ID / Touch ID later from Account if you want."}
         </p>
-
-        <button
-          type="button"
-          className="btn-primary auth-passkey"
-          onClick={signInWithPasskey}
-          disabled={busy !== null}
-        >
-          {busy === "passkey" ? "Waiting for passkey…" : "Continue with passkey"}
-        </button>
-
-        <div className="auth-divider">
-          <span>or email</span>
-        </div>
 
         <form className="panel-form" onSubmit={onSubmit}>
           {mode === "signup" ? (
@@ -119,7 +139,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
             Email
             <input
               type="email"
-              autoComplete="username webauthn"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -170,6 +190,33 @@ export function AuthPanel({ mode }: { mode: Mode }) {
                 : "Create account"}
           </button>
         </form>
+
+        {mode === "login" ? (
+          <>
+            <div className="auth-divider">
+              <span>or return with passkey</span>
+            </div>
+            <button
+              type="button"
+              className="btn-ghost auth-passkey"
+              onClick={signInWithPasskey}
+              disabled={busy !== null}
+            >
+              {busy === "passkey"
+                ? "Waiting for authenticator… (cancel if stuck)"
+                : "Continue with passkey"}
+            </button>
+            <p className="muted auth-passkey-hint">
+              Only after you add a passkey on{" "}
+              <Link href="/account">Account</Link>. New here? Use email first.
+            </p>
+          </>
+        ) : (
+          <p className="muted auth-passkey-hint">
+            After signup, open Account to register a passkey for one-tap return
+            visits. Passkeys are not created during signup.
+          </p>
+        )}
 
         <p className="auth-switch muted">
           {mode === "login" ? (
