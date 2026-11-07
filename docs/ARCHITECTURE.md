@@ -6,7 +6,7 @@
 User (passkey / email)
    └─ Better Auth session
         └─ Next.js App Router UI
-             ├─ Prisma (SQLite → Neon Postgres)
+             ├─ Prisma (Neon Postgres)
              ├─ PayPal sandbox APIs
              │    Orders → Authorize → Capture / Void
              │    Invoice · Payout · Refund · Webhooks
@@ -26,7 +26,7 @@ User (passkey / email)
 ## Storage
 
 - **Local:** Prisma + SQLite (`prisma/dev.db`)
-- **Production:** Neon or Supabase Postgres — same schema, change `provider` + `DATABASE_URL`
+- **Production:** Neon Postgres via Vercel Marketplace (`DATABASE_URL` + `DATABASE_URL_UNPOOLED`)
 - Domain tables: `User`, `Session`, `Account`, `Passkey`, `Job`, `LedgerEntry`, `InvoiceRecord`, `PayoutRecord`, `WebhookEvent`
 
 ## Key modules

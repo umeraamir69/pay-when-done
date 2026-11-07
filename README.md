@@ -38,8 +38,8 @@ Business sandbox for this project is configured on the merchant app (**Hackathon
 
 | Layer | Choice |
 |---|---|
-| **DB (local)** | Prisma + SQLite |
-| **DB (prod)** | SQLite on Vercel `/tmp` for hackathon demo (swap to Neon/Postgres for durable prod) |
+| **DB (local)** | Prisma + Neon Postgres |
+| **DB (prod)** | Neon Postgres (Vercel Marketplace) |
 | **Auth** | Better Auth + **Passkeys** |
 | **Payments** | PayPal sandbox REST APIs |
 | **AI** | Meta Muse (`muse-spark-1.3`) |
@@ -86,7 +86,8 @@ Without PayPal keys → mock authorize/capture. Without Muse key → mock AI.
 See [`.env.example`](.env.example). Required for real sandbox + Muse:
 
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://..."
+DATABASE_URL_UNPOOLED="postgresql://..."
 BETTER_AUTH_SECRET=long-random-string
 BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
