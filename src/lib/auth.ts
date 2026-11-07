@@ -47,6 +47,8 @@ export const auth = betterAuth({
   baseURL: explicitBase,
   emailAndPassword: {
     enabled: true,
+    // Resend is not configured — never gate demo signup/login on email verification.
+    requireEmailVerification: false,
   },
   plugins: [
     passkey({
