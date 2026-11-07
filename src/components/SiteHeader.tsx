@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
 
 const links = [
+  { href: "/about", label: "About" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/templates", label: "Templates" },
   { href: "/create", label: "New job" },
