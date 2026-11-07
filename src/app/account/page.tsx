@@ -9,7 +9,8 @@ export default function AccountPage() {
       <p className="eyebrow">Security</p>
       <h1>Your account</h1>
       <p className="lede narrow" style={{ marginBottom: "1.5rem" }}>
-        Add a passkey here after login. Next visit, use it on the login page.
+        Add a passkey here after signup or login. Next visit, use it on the
+        login page. Password always remains available.
       </p>
       <AccountPasskeys />
     </div>

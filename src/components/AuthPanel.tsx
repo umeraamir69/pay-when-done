@@ -78,8 +78,8 @@ export function AuthPanel({ mode }: { mode: Mode }) {
           name: name || email.split("@")[0],
         });
         if (err) throw new Error(err.message || "Sign up failed");
-        setInfo("Account created. Optional: add a passkey from Account.");
-        router.push("/account");
+        // Ask for an optional passkey right after account creation.
+        router.push("/account?setup=passkey");
         router.refresh();
         return;
       }
@@ -89,7 +89,17 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         password,
       });
       if (err) throw new Error(err.message || "Sign in failed");
-      router.push("/jobs");
+
+      // Password login without a passkey: nudge setup (cancellable on Account).
+      let needsPasskeySetup = true;
+      try {
+        const { data: keys } = await authClient.passkey.listUserPasskeys();
+        needsPasskeySetup = !((keys as unknown[]) || []).length;
+      } catch {
+        needsPasskeySetup = true;
+      }
+
+      router.push(needsPasskeySetup ? "/account?setup=passkey" : "/jobs");
       router.refresh();
     } catch (err) {
       if (!mountedRef.current) return;
@@ -186,7 +196,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         <p className="muted">
           {mode === "login"
             ? "Sign in with email and password. Passkey is only for return visits after you add one on Account."
-            : "Create an account with email. Add Face ID / Touch ID later from Account if you want."}
+            : "Create an account with email and password. You’ll be asked to add an optional passkey next."}
         </p>
 
         <form className="panel-form" onSubmit={onSubmit}>
@@ -281,8 +291,8 @@ export function AuthPanel({ mode }: { mode: Mode }) {
           </>
         ) : (
           <p className="muted auth-passkey-hint">
-            After signup, open Account to register a passkey for one-tap return
-            visits. Passkeys are not created during signup.
+            After you create an account, we’ll take you to Account to register an
+            optional passkey for one-tap return visits. You can skip it anytime.
           </p>
         )}
 
