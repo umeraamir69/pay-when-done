@@ -2,10 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
 type Mode = "login" | "signup";
+
+/** Only started after an explicit passkey click — never on mount. */
+const PASSKEY_TIMEOUT_MS = 60_000;
+
+function isAbortError(err: unknown) {
+  return (
+    (err instanceof DOMException && err.name === "AbortError") ||
+    (err instanceof Error &&
+      (err.name === "AbortError" || /abort|cancel/i.test(err.message)))
+  );
+}
 
 export function AuthPanel({ mode }: { mode: Mode }) {
   const router = useRouter();
@@ -15,11 +26,41 @@ export function AuthPanel({ mode }: { mode: Mode }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  /** Passkey errors are isolated so email flow never inherits them. */
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+
+  const mountedRef = useRef(true);
+  const passkeyAttemptRef = useRef(0);
+  const passkeyAbortRef = useRef<AbortController | null>(null);
+
+  // Clear sticky error/info from prior visits / remounts. Never start WebAuthn here.
+  useEffect(() => {
+    mountedRef.current = true;
+    setError(null);
+    setInfo(null);
+    setPasskeyError(null);
+    setBusy(null);
+
+    return () => {
+      mountedRef.current = false;
+      passkeyAttemptRef.current += 1;
+      passkeyAbortRef.current?.abort();
+      passkeyAbortRef.current = null;
+    };
+  }, []);
+
+  function abortPasskeyAttempt() {
+    passkeyAttemptRef.current += 1;
+    passkeyAbortRef.current?.abort();
+    passkeyAbortRef.current = null;
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    abortPasskeyAttempt();
     setBusy("form");
     setError(null);
+    setPasskeyError(null);
     setInfo(null);
     try {
       if (mode === "signup") {
@@ -29,7 +70,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
           name: name || email.split("@")[0],
         });
         if (err) throw new Error(err.message || "Sign up failed");
-        setInfo("Account created. Register a passkey next for one-tap login.");
+        setInfo("Account created. Register a passkey on Account for one-tap login.");
         router.push("/account");
         router.refresh();
         return;
@@ -43,30 +84,87 @@ export function AuthPanel({ mode }: { mode: Mode }) {
       router.push("/admin");
       router.refresh();
     } catch (err) {
+      if (!mountedRef.current) return;
       setError(err instanceof Error ? err.message : "Auth failed");
     } finally {
-      setBusy(null);
+      if (mountedRef.current) setBusy(null);
     }
   }
 
   async function signInWithPasskey() {
+    const attemptId = passkeyAttemptRef.current + 1;
+    passkeyAttemptRef.current = attemptId;
+    passkeyAbortRef.current?.abort();
+
+    const ac = new AbortController();
+    passkeyAbortRef.current = ac;
+
     setBusy("passkey");
     setError(null);
+    setPasskeyError(null);
+    setInfo(null);
+
+    const timeoutId = window.setTimeout(() => {
+      ac.abort();
+    }, PASSKEY_TIMEOUT_MS);
+
+    const stillCurrent = () =>
+      mountedRef.current && passkeyAttemptRef.current === attemptId;
+
     try {
-      const { error: err } = await authClient.signIn.passkey({
-        autoFill: true,
+      const passkeyPromise = authClient.signIn.passkey({
+        // Explicit modal ceremony only — no conditional / autofill WebAuthn.
+        autoFill: false,
       });
-      if (err) throw new Error(err.message || "Passkey sign-in failed");
+
+      const abortPromise = new Promise<never>((_, reject) => {
+        const onAbort = () =>
+          reject(new DOMException("Passkey aborted", "AbortError"));
+        if (ac.signal.aborted) {
+          onAbort();
+          return;
+        }
+        ac.signal.addEventListener("abort", onAbort, { once: true });
+      });
+
+      const { error: err } = await Promise.race([
+        passkeyPromise,
+        abortPromise,
+      ]);
+
+      if (!stillCurrent()) return;
+
+      if (err) {
+        setPasskeyError(
+          err.message ||
+            "Passkey sign-in failed. Sign in with email, then add a passkey from Account.",
+        );
+        return;
+      }
+
       router.push("/admin");
       router.refresh();
     } catch (err) {
-      setError(
+      if (!stillCurrent()) return;
+
+      if (isAbortError(err) || ac.signal.aborted) {
+        setPasskeyError(
+          "Passkey cancelled or timed out. Sign in with email instead, then add a passkey from Account.",
+        );
+        return;
+      }
+
+      setPasskeyError(
         err instanceof Error
           ? err.message
           : "Passkey failed — register one from Account after email login",
       );
     } finally {
-      setBusy(null);
+      window.clearTimeout(timeoutId);
+      if (passkeyAbortRef.current === ac) {
+        passkeyAbortRef.current = null;
+      }
+      if (stillCurrent()) setBusy(null);
     }
   }
 
@@ -78,22 +176,10 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         </p>
         <h1>{mode === "login" ? "Sign in" : "Sign up"}</h1>
         <p className="muted">
-          Use email once, then register a passkey (Touch ID / Face ID / Windows
-          Hello) for passwordless login every time.
+          {mode === "login"
+            ? "Sign in with email and password. Passkeys are optional after you register one on Account while logged in."
+            : "Create an account with email and password. After you sign in, you can register a passkey on Account for passwordless login."}
         </p>
-
-        <button
-          type="button"
-          className="btn-primary auth-passkey"
-          onClick={signInWithPasskey}
-          disabled={busy !== null}
-        >
-          {busy === "passkey" ? "Waiting for passkey…" : "Continue with passkey"}
-        </button>
-
-        <div className="auth-divider">
-          <span>or email</span>
-        </div>
 
         <form className="panel-form" onSubmit={onSubmit}>
           {mode === "signup" ? (
@@ -111,7 +197,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
             Email
             <input
               type="email"
-              autoComplete="username webauthn"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -146,6 +232,30 @@ export function AuthPanel({ mode }: { mode: Mode }) {
                 : "Create account"}
           </button>
         </form>
+
+        {mode === "login" ? (
+          <>
+            <div className="auth-divider">
+              <span>or passkey</span>
+            </div>
+
+            <button
+              type="button"
+              className="btn-ghost auth-passkey"
+              onClick={signInWithPasskey}
+              disabled={busy !== null}
+            >
+              {busy === "passkey"
+                ? "Waiting for passkey…"
+                : "Continue with passkey"}
+            </button>
+            {passkeyError ? <p className="error">{passkeyError}</p> : null}
+            <p className="muted auth-passkey-hint">
+              Only works after you add a passkey on Account while logged in. If
+              the browser prompt hangs, cancel it and use email.
+            </p>
+          </>
+        ) : null}
 
         <p className="auth-switch muted">
           {mode === "login" ? (
