@@ -1,16 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import type { JobCategory, JobPriority } from "@/lib/types";
-import { JOB_TEMPLATES } from "@/lib/templates";
+import { JOB_TEMPLATES, getTemplateById } from "@/lib/templates";
 
 function CreateJobFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initial =
-    JOB_TEMPLATES.find((t) => t.id === searchParams.get("template")) ||
-    JOB_TEMPLATES[0];
+    getTemplateById(searchParams.get("template")) || JOB_TEMPLATES[0];
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ function CreateJobFormInner() {
   }, [searchParams]);
 
   function applyTemplate(id: string) {
-    const t = JOB_TEMPLATES.find((x) => x.id === id);
+    const t = getTemplateById(id);
     if (!t) return;
     setActiveTemplate(id);
     setTitle(t.title);
@@ -84,8 +84,13 @@ function CreateJobFormInner() {
   return (
     <form className="panel-form" onSubmit={onSubmit}>
       <div className="template-row">
-        <span className="field-label">Quick templates</span>
-        <div className="chip-row">
+        <div className="template-row-heading">
+          <span className="field-label">Quick templates</span>
+          <Link href="/templates" className="template-browse-link">
+            Browse library
+          </Link>
+        </div>
+        <div className="chip-row chip-row-scroll">
           {JOB_TEMPLATES.map((t) => (
             <button
               key={t.id}
