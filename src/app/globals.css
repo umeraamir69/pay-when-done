@@ -2250,8 +2250,120 @@ select {
 
 .account-grid {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.15rem;
+  align-items: start;
+}
+
+.account-profile,
+.account-passkeys {
+  display: grid;
   gap: 1rem;
+  align-content: start;
+}
+
+.account-profile-lede {
+  margin: -0.35rem 0 0;
+}
+
+.account-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.account-avatar {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 1.1rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(145deg, rgba(15, 118, 110, 0.18), rgba(12, 36, 32, 0.12)),
+    rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--line);
+  color: var(--bg-deep);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.account-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.account-avatar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.account-avatar-hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.account-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.account-file-label {
+  cursor: pointer;
+}
+
+.account-form {
+  display: grid;
+  gap: 0.85rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--line);
+}
+
+.account-password-form {
+  margin-top: 0.25rem;
+}
+
+.account-subhead {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.account-readonly,
+.account-form input:disabled {
+  opacity: 0.78;
+  background: rgba(231, 238, 241, 0.65);
+  cursor: not-allowed;
+}
+
+.account-field-note {
+  margin: -0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.account-signout {
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--line);
 }
 
 .passkey-setup-banner {
@@ -2276,7 +2388,7 @@ select {
 
 .passkey-list {
   list-style: none;
-  margin: 1rem 0;
+  margin: 0.25rem 0;
   padding: 0;
   display: grid;
   gap: 0.65rem;
@@ -2291,9 +2403,27 @@ select {
   border-bottom: 1px solid var(--line);
 }
 
+.account-passkeys > .btn-primary,
+.account-form > .btn-primary {
+  margin-top: 0.15rem;
+}
+
 @media (max-width: 800px) {
   .account-grid {
     grid-template-columns: 1fr;
+  }
+
+  .passkey-setup-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .passkey-setup-skip {
+    width: 100%;
+  }
+
+  .account-avatar-row {
+    align-items: flex-start;
   }
 }
 

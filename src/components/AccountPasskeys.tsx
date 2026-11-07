@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient, useSession } from "@/lib/auth-client";
+import { AccountProfile } from "@/components/AccountProfile";
 
 type PasskeyRow = {
   id: string;
@@ -15,13 +16,15 @@ function AccountPasskeysInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setupPasskey = searchParams.get("setup") === "passkey";
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending, refetch } = useSession();
   const [passkeys, setPasskeys] = useState<PasskeyRow[]>([]);
   const [name, setName] = useState("This device");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [showSetupNudge, setShowSetupNudge] = useState(setupPasskey);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  const showSetupNudge = setupPasskey && !nudgeDismissed;
+  const sessionUserId = session?.user?.id;
 
   async function refresh() {
     const { data, error: err } = await authClient.passkey.listUserPasskeys();
@@ -33,15 +36,28 @@ function AccountPasskeysInner() {
   }
 
   useEffect(() => {
-    if (session) refresh().catch(console.error);
-  }, [session]);
-
-  useEffect(() => {
-    setShowSetupNudge(setupPasskey);
-  }, [setupPasskey]);
+    if (!sessionUserId) return;
+    let cancelled = false;
+    authClient.passkey
+      .listUserPasskeys()
+      .then(({ data, error: err }) => {
+        if (cancelled) return;
+        if (err) {
+          setError(err.message || "Could not list passkeys");
+          return;
+        }
+        setPasskeys((data as PasskeyRow[]) || []);
+      })
+      .catch((err) => {
+        if (!cancelled) console.error(err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionUserId]);
 
   function dismissSetupNudge() {
-    setShowSetupNudge(false);
+    setNudgeDismissed(true);
     if (setupPasskey) {
       router.replace("/account");
     }
@@ -67,10 +83,8 @@ function AccountPasskeysInner() {
       if (result?.error) {
         throw new Error(result.error.message || "Could not add passkey");
       }
-      setInfo(
-        "Passkey saved. On your next visit, use Continue with passkey on the login page.",
-      );
-      setShowSetupNudge(false);
+      setInfo("Passkey saved. You can use it next time you sign in.");
+      setNudgeDismissed(true);
       if (setupPasskey) {
         router.replace("/account");
       }
@@ -112,12 +126,6 @@ function AccountPasskeysInner() {
     }
   }
 
-  async function logout() {
-    await authClient.signOut();
-    router.push("/login");
-    router.refresh();
-  }
-
   if (isPending) {
     return <p className="muted">Loading session…</p>;
   }
@@ -125,7 +133,7 @@ function AccountPasskeysInner() {
   if (!session) {
     return (
       <div className="panel">
-        <p>Sign in to manage passkeys.</p>
+        <p>Sign in to manage your account.</p>
         <a className="btn-primary" href="/login">
           Go to login
         </a>
@@ -154,24 +162,20 @@ function AccountPasskeysInner() {
         </div>
       ) : null}
 
-      <article className="panel reveal">
-        <h2>Profile</h2>
-        <p>
-          <strong>{session.user.name}</strong>
-        </p>
-        <p className="muted">{session.user.email}</p>
-        <button type="button" className="btn-ghost" onClick={logout}>
-          Sign out
-        </button>
-      </article>
+      <AccountProfile
+        user={session.user}
+        onUpdated={async () => {
+          await refetch();
+        }}
+      />
 
       <article
-        className={`panel reveal delay-1${needsPasskey ? " passkey-panel-highlight" : ""}`}
+        className={`panel reveal delay-1 account-passkeys${needsPasskey ? " passkey-panel-highlight" : ""}`}
       >
         <h2>Passkeys</h2>
         <p className="muted">
-          Optional. Add Face ID / Touch ID / Windows Hello here after you are
-          signed in. Next visit, use Continue with passkey on the login page.
+          Optional Face ID / Touch ID / Windows Hello for faster return visits.
+          Email and password still work.
         </p>
 
         {error ? <p className="error">{error}</p> : null}
