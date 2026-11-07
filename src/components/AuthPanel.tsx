@@ -6,6 +6,8 @@ import { FormEvent, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
 type Mode = "login" | "signup";
+/** Login: email → then password and/or passkey depending on account */
+type LoginStep = "email" | "auth";
 
 function passkeyErrorMessage(err: unknown) {
   const raw =
@@ -22,12 +24,12 @@ function passkeyErrorMessage(err: unknown) {
     lower.includes("timed out") ||
     lower.includes("timeout")
   ) {
-    return "Passkey cancelled or timed out. Sign in with email instead, then add a passkey from Account.";
+    return "Passkey cancelled or timed out. Use your password instead.";
   }
   if (lower.includes("credential") || lower.includes("no passkey")) {
-    return "No passkey on this device yet. Sign in with email, open Account, then tap Add passkey.";
+    return "No passkey found on this device. Sign in with password, then register one on Account.";
   }
-  return `${raw}. Tip: use email first, then register a passkey on Account.`;
+  return `${raw}. You can still sign in with your password.`;
 }
 
 export function AuthPanel({ mode }: { mode: Mode }) {
@@ -36,9 +38,52 @@ export function AuthPanel({ mode }: { mode: Mode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loginStep, setLoginStep] = useState<LoginStep>("email");
+  const [hasPasskey, setHasPasskey] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  async function checkPasskeyStatus(nextEmail: string) {
+    const res = await fetch("/api/auth/passkey-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: nextEmail }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      hasPasskey?: boolean;
+    };
+    return Boolean(data.hasPasskey);
+  }
+
+  async function onContinueEmail(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setInfo(null);
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed.includes("@")) {
+      setError("Enter a valid email to continue.");
+      return;
+    }
+    setBusy("lookup");
+    try {
+      const found = await checkPasskeyStatus(trimmed);
+      setEmail(trimmed);
+      setHasPasskey(found);
+      setLoginStep("auth");
+      setInfo(
+        found
+          ? "Passkey found for this email — use it below, or sign in with password."
+          : "No passkey on this account yet. Sign in with password, then register one on Account.",
+      );
+    } catch {
+      setHasPasskey(false);
+      setLoginStep("auth");
+      setInfo("Sign in with your password.");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -59,8 +104,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
           name: name || email.split("@")[0],
         });
         if (err) throw new Error(err.message || "Sign up failed");
-        setInfo("Account created. Optional: add a passkey from Account.");
-        router.push("/account");
+        router.push("/account?setup=passkey");
         router.refresh();
         return;
       }
@@ -70,7 +114,12 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         password,
       });
       if (err) throw new Error(err.message || "Sign in failed");
-      router.push("/jobs");
+
+      if (!hasPasskey) {
+        router.push("/account?setup=passkey");
+      } else {
+        router.push("/jobs");
+      }
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Auth failed");
@@ -82,7 +131,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
   async function signInWithPasskey() {
     setBusy("passkey");
     setError(null);
-    setInfo("Touch your security key / approve Face ID or Touch ID…");
+    setInfo("Approve Face ID / Touch ID / your security key…");
 
     const timeoutMs = 45_000;
     const timeout = new Promise<never>((_, reject) => {
@@ -93,6 +142,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
 
     try {
       const result = await Promise.race([
+        // Discoverable credentials — email already confirmed via passkey-status
         authClient.signIn.passkey({}),
         timeout,
       ]);
@@ -109,113 +159,209 @@ export function AuthPanel({ mode }: { mode: Mode }) {
     }
   }
 
+  function changeEmail() {
+    setLoginStep("email");
+    setHasPasskey(false);
+    setPassword("");
+    setError(null);
+    setInfo(null);
+  }
+
   return (
     <div className="auth-shell">
-      <div className="auth-card panel reveal">
+      <aside className="auth-showcase reveal">
+        <p className="eyebrow light">PayWhenDone</p>
+        <h2 className="auth-showcase-title">
+          {mode === "login"
+            ? "Back to protected gigs."
+            : "Escrow that checks the work."}
+        </h2>
+        <p className="auth-showcase-lede">
+          Hold PayPal payment for cleaners, tutors, movers, and handymen hired
+          off-platform — Muse AI confirms proof before money moves.
+        </p>
+        <div className="auth-pipeline" aria-hidden="true">
+          <span>Hold</span>
+          <i />
+          <span>Prove</span>
+          <i />
+          <span>Verify</span>
+          <i />
+          <span className="accent">Pay</span>
+        </div>
+        <ul className="auth-highlights">
+          <li>
+            <strong>PayPal authorize</strong>
+            <span>Funds held until the job checks out — not captured early.</span>
+          </li>
+          <li>
+            <strong>Proof + Muse</strong>
+            <span>Photos and notes matched against the written brief.</span>
+          </li>
+          <li>
+            <strong>Release or void</strong>
+            <span>Capture, payout, refund, or cancel from one workspace.</span>
+          </li>
+        </ul>
+        <div className="auth-showcase-footer">
+          <Link href="/how-it-works">How it works</Link>
+          <Link href="/templates">Templates</Link>
+          <Link href="/about">About</Link>
+        </div>
+      </aside>
+
+      <div className="auth-card panel reveal delay-1">
         <p className="eyebrow">
           {mode === "login" ? "Welcome back" : "Create account"}
         </p>
-        <h1>{mode === "login" ? "Sign in" : "Sign up"}</h1>
-        <p className="muted">
+        <h1>{mode === "login" ? "Sign in" : "Join PayWhenDone"}</h1>
+        <p className="muted auth-card-lede">
           {mode === "login"
-            ? "Sign in with email and password. Passkey is only for return visits after you add one on Account."
-            : "Create an account with email. Add Face ID / Touch ID later from Account if you want."}
+            ? loginStep === "email"
+              ? "Enter your email first. We’ll check for a passkey, then sign you in."
+              : hasPasskey
+                ? "This account has a passkey — use it, or fall back to password."
+                : "No passkey yet. Sign in with password, then register one on Account."
+            : "Create an account with email and password. You’ll be asked to add a passkey after signup."}
         </p>
 
-        <form className="panel-form" onSubmit={onSubmit}>
-          {mode === "signup" ? (
+        {mode === "login" && loginStep === "email" ? (
+          <form className="panel-form" onSubmit={onContinueEmail}>
             <label>
-              Name
+              Email
               <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Alex Rivera"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={busy !== null}
               />
             </label>
-          ) : null}
-          <label>
-            Email
-            <input
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+            {error ? <p className="error">{error}</p> : null}
+            <button
+              type="submit"
+              className="btn-primary auth-submit"
               disabled={busy !== null}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              autoComplete={
-                mode === "login" ? "current-password" : "new-password"
-              }
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={8}
-              required
-              disabled={busy !== null}
-            />
-          </label>
-          {mode === "signup" ? (
+            >
+              {busy === "lookup" ? "Checking…" : "Continue"}
+            </button>
+          </form>
+        ) : (
+          <form className="panel-form" onSubmit={onSubmit}>
+            {mode === "signup" ? (
+              <label>
+                Name
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Alex Rivera"
+                  required
+                  disabled={busy !== null}
+                />
+              </label>
+            ) : null}
+
+            {mode === "login" ? (
+              <div className="auth-email-chip">
+                <span>{email}</span>
+                <button type="button" onClick={changeEmail} disabled={busy !== null}>
+                  Change
+                </button>
+              </div>
+            ) : (
+              <label>
+                Email
+                <input
+                  type="email"
+                  autoComplete="username"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={busy !== null}
+                />
+              </label>
+            )}
+
+            {mode === "login" && hasPasskey ? (
+              <>
+                <button
+                  type="button"
+                  className="btn-primary auth-submit"
+                  onClick={signInWithPasskey}
+                  disabled={busy !== null}
+                >
+                  {busy === "passkey"
+                    ? "Waiting for authenticator…"
+                    : "Continue with passkey"}
+                </button>
+                <div className="auth-divider">
+                  <span>or password</span>
+                </div>
+              </>
+            ) : null}
+
             <label>
-              Confirm password
+              Password
               <input
                 type="password"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 minLength={8}
                 required
                 disabled={busy !== null}
               />
             </label>
-          ) : null}
+            {mode === "signup" ? (
+              <label>
+                Confirm password
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={8}
+                  required
+                  disabled={busy !== null}
+                />
+              </label>
+            ) : null}
 
-          {error ? <p className="error">{error}</p> : null}
-          {info ? <p className="banner">{info}</p> : null}
+            {error ? <p className="error">{error}</p> : null}
+            {info ? <p className="banner">{info}</p> : null}
 
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={busy !== null}
-          >
-            {busy === "form"
-              ? "Please wait…"
-              : mode === "login"
-                ? "Sign in with email"
-                : "Create account"}
-          </button>
-        </form>
-
-        {mode === "login" ? (
-          <>
-            <div className="auth-divider">
-              <span>or return with passkey</span>
-            </div>
             <button
-              type="button"
-              className="btn-ghost auth-passkey"
-              onClick={signInWithPasskey}
+              type="submit"
+              className={
+                mode === "login" && hasPasskey
+                  ? "btn-ghost auth-submit"
+                  : "btn-primary auth-submit"
+              }
               disabled={busy !== null}
             >
-              {busy === "passkey"
-                ? "Waiting for authenticator… (cancel if stuck)"
-                : "Continue with passkey"}
+              {busy === "form"
+                ? "Please wait…"
+                : mode === "login"
+                  ? "Sign in with password"
+                  : "Create account"}
             </button>
-            <p className="muted auth-passkey-hint">
-              Only after you add a passkey on{" "}
-              <Link href="/account">Account</Link>. New here? Use email first.
-            </p>
-          </>
-        ) : (
-          <p className="muted auth-passkey-hint">
-            After signup, open Account to register a passkey for one-tap return
-            visits. Passkeys are not created during signup.
-          </p>
+
+            {mode === "login" && !hasPasskey ? (
+              <p className="muted auth-passkey-hint">
+                After you sign in, we’ll take you to Account to register a
+                passkey for next time.
+              </p>
+            ) : null}
+            {mode === "signup" ? (
+              <p className="muted auth-passkey-hint">
+                Next step after signup: register a passkey on Account for
+                passwordless return visits.
+              </p>
+            ) : null}
+          </form>
         )}
 
         <p className="auth-switch muted">
