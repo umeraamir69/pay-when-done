@@ -222,7 +222,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
               : hasPasskey
                 ? "This account has a passkey — use it, or fall back to password."
                 : "No passkey yet. Sign in with password, then register one on Account."
-            : "Create an account with email and password. You’ll be asked to add a passkey after signup."}
+            : "Create an account with email and password."}
         </p>
 
         {mode === "login" && loginStep === "email" ? (
