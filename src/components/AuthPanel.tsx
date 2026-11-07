@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { BackgroundAtmosphere } from "@/components/BackgroundAtmosphere";
 import { authClient } from "@/lib/auth-client";
 
 type Mode = "login" | "signup";
@@ -72,6 +73,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
 
   return (
     <div className="auth-shell">
+      <BackgroundAtmosphere variant="auth" />
       <div className="auth-card panel reveal">
         <p className="eyebrow">
           {mode === "login" ? "Welcome back" : "Create account"}
