@@ -106,7 +106,7 @@ export default function HomePage() {
             ))}
           </ol>
         </FadeIn>
-        <div className="cta-row" style={{ marginTop: "1.75rem" }}>
+        <div className="cta-row">
           <Link href="/create" className="btn-primary">
             Start a job
           </Link>

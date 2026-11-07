@@ -58,8 +58,8 @@ pre {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  padding: 0.95rem 1.5rem;
+  gap: 1.5rem;
+  padding: 1.15rem 2rem;
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(12px);
   position: sticky;
@@ -77,10 +77,10 @@ pre {
 
 .site-header nav {
   display: flex;
-  gap: 1.15rem;
+  gap: 1.75rem;
   font-size: 0.92rem;
   margin-left: auto;
-  margin-right: 0.75rem;
+  margin-right: 1rem;
 }
 
 .site-header nav a {
@@ -179,12 +179,18 @@ button.btn-ghost {
   min-height: calc(100vh - 72px);
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
-  gap: 2rem;
-  padding: 3.25rem 1.5rem 4rem;
+  gap: 3.5rem;
+  padding: 5rem 2rem 5.5rem;
   max-width: 1120px;
   margin: 0 auto;
   align-items: end;
   overflow: hidden;
+}
+
+.hero-copy {
+  display: grid;
+  gap: 0;
+  align-content: end;
 }
 
 .hero-atmosphere {
@@ -207,14 +213,14 @@ button.btn-ghost {
   font-size: clamp(3.2rem, 8vw, 5.8rem);
   line-height: 0.92;
   letter-spacing: -0.045em;
-  margin: 0.25rem 0 1rem;
+  margin: 0 0 1.5rem;
 }
 
 .lede {
   max-width: 34rem;
   font-size: 1.08rem;
   color: var(--muted);
-  line-height: 1.55;
+  line-height: 1.6;
   margin: 0;
 }
 
@@ -228,7 +234,7 @@ button.btn-ghost {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--accent);
-  margin: 0;
+  margin: 0 0 1rem;
 }
 
 .eyebrow.light {
@@ -237,8 +243,8 @@ button.btn-ghost {
 
 .cta-row {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1.75rem;
+  gap: 1rem;
+  margin-top: 2.25rem;
   flex-wrap: wrap;
 }
 
@@ -282,11 +288,19 @@ button.btn-ghost {
   letter-spacing: -0.03em;
 }
 
+.hero-pipeline-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .hero-pipeline i {
   width: 1.4rem;
   height: 2px;
   background: rgba(255, 255, 255, 0.35);
   display: inline-block;
+  transform-origin: left center;
+  will-change: transform, opacity;
 }
 
 .hero-pipeline .accent {
@@ -328,11 +342,31 @@ button.btn-ghost {
   }
 }
 
+@keyframes drift-alt {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(16px, -14px) scale(1.04);
+  }
+}
+
+@keyframes geometry-breathe {
+  from {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
 /* —— Sections —— */
 .section {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 1.25rem 1.5rem 3.5rem;
+  padding: 4rem 2rem 4.5rem;
 }
 
 .section h2,
@@ -346,38 +380,43 @@ button.btn-ghost {
 
 .section h2 {
   font-size: clamp(1.8rem, 3vw, 2.4rem);
-  margin: 0.35rem 0 1.1rem;
+  margin: 0 0 2rem;
   max-width: 28rem;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .split-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 2.5rem 3rem;
 }
 
 .story-block {
-  padding: 1.35rem 0;
+  padding: 2rem 0 0.5rem;
   border-top: 1px solid var(--line);
 }
 
 .story-block h3 {
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.75rem;
   font-size: 1.15rem;
 }
 
 .story-block p {
   margin: 0;
   color: var(--muted);
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 .band {
   background: rgba(255, 255, 255, 0.42);
   border-block: 1px solid var(--line);
   max-width: none;
-  padding-inline: max(1.5rem, calc((100% - 1120px) / 2 + 1.5rem));
+  padding-block: 4.5rem;
+  padding-inline: max(2rem, calc((100% - 1120px) / 2 + 2rem));
+}
+
+.band .cta-row {
+  margin-top: 2.75rem;
 }
 
 .steps-rail {
@@ -386,13 +425,13 @@ button.btn-ghost {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap: 1.75rem 2.25rem;
 }
 
 .steps-rail li {
   display: grid;
-  gap: 0.45rem;
-  padding-top: 0.85rem;
+  gap: 0.75rem;
+  padding-top: 1.35rem;
   border-top: 3px solid var(--bg-deep);
 }
 
@@ -404,36 +443,36 @@ button.btn-ghost {
 
 .steps-rail span {
   color: var(--muted);
-  line-height: 1.45;
+  line-height: 1.55;
   font-size: 0.95rem;
 }
 
 .audience-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap: 1.75rem 2rem;
 }
 
 .audience-grid article {
-  padding: 1rem 0;
+  padding: 1.75rem 0 0.25rem;
   border-top: 1px solid var(--line);
 }
 
 .audience-grid h3 {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.6rem;
 }
 
 .audience-grid p {
   margin: 0;
   color: var(--muted);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .band-dark {
   background: var(--bg-deep);
   color: #f4fffa;
   max-width: none;
-  padding: 3rem max(1.5rem, calc((100% - 1120px) / 2 + 1.5rem));
+  padding: 4.5rem max(2rem, calc((100% - 1120px) / 2 + 2rem));
   border: none;
 }
 
@@ -448,7 +487,7 @@ button.btn-ghost {
 .stack-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+  gap: 2rem 2.5rem;
 }
 
 .stack-row h3 {
@@ -464,12 +503,18 @@ button.btn-ghost {
 
 .cta-finale {
   text-align: left;
-  padding-bottom: 5rem;
+  padding-top: 4.5rem;
+  padding-bottom: 6rem;
 }
 
 .cta-finale h2 {
   max-width: 20ch;
   font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 1.25rem;
+}
+
+.cta-finale .lede {
+  margin-bottom: 0.25rem;
 }
 
 /* —— Pages —— */
@@ -898,8 +943,28 @@ textarea {
 
   .hero {
     align-items: stretch;
-    padding-top: 2rem;
+    gap: 2.5rem;
+    padding: 3.25rem 1.5rem 4rem;
     min-height: auto;
+  }
+
+  .section {
+    padding: 3.25rem 1.5rem 3.75rem;
+  }
+
+  .band {
+    padding-block: 3.5rem;
+    padding-inline: 1.5rem;
+  }
+
+  .band-dark {
+    padding: 3.5rem 1.5rem;
+  }
+
+  .split-grid,
+  .steps-rail,
+  .audience-grid {
+    gap: 1.75rem;
   }
 
   .hero-stage {
