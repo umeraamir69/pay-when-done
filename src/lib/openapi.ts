@@ -18,7 +18,7 @@ export const openApiSpec = {
   ],
   tags: [
     { name: "Health", description: "Liveness / readiness" },
-    { name: "Auth", description: "Better Auth (email + passkeys)" },
+    { name: "Auth", description: "Better Auth (email, passkeys, optional magic link)" },
     { name: "Jobs", description: "Escrow job lifecycle" },
     { name: "PayPal", description: "Public PayPal client config" },
     { name: "Webhooks", description: "PayPal webhook ingest (signature required)" },

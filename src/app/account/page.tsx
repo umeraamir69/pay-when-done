@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AccountPasskeys } from "@/components/AccountPasskeys";
 
 export const metadata: Metadata = { title: "Account" };
@@ -9,9 +10,12 @@ export default function AccountPage() {
       <p className="eyebrow">Security</p>
       <h1>Your account</h1>
       <p className="lede narrow" style={{ marginBottom: "1.5rem" }}>
-        Manage passkeys for passwordless sign-in on every visit.
+        Add a passkey for passwordless (passkey) sign-in on every visit — Face
+        ID, Touch ID, or Windows Hello. No password next time.
       </p>
-      <AccountPasskeys />
+      <Suspense fallback={<p className="muted">Loading account…</p>}>
+        <AccountPasskeys />
+      </Suspense>
     </div>
   );
 }

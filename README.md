@@ -40,7 +40,7 @@ Business sandbox for this project is configured on the merchant app (**Hackathon
 |---|---|
 | **DB (local)** | Prisma + SQLite |
 | **DB (prod)** | SQLite on Vercel `/tmp` for hackathon demo (swap to Neon/Postgres for durable prod) |
-| **Auth** | Better Auth + **Passkeys** |
+| **Auth** | Better Auth + **Passkeys** (passwordless) + optional magic link via Resend |
 | **Payments** | PayPal sandbox REST APIs |
 | **AI** | Meta Muse (`muse-spark-1.3`) |
 | **UI** | Next.js App Router + Framer Motion |
@@ -59,7 +59,7 @@ Business sandbox for this project is configured on the merchant app (**Hackathon
 
 - Escrow: hold → proof → Muse verify → release / void / refund  
 - PayPal: orders, authorize, capture, void, refund, invoice, payout, sync, webhooks  
-- Auth: email signup + **passkey login**  
+- Auth: email signup + **passwordless passkey login** (optional magic link when `RESEND_API_KEY` set)  
 - Ops: admin dashboard, ledger, CSV export, notifications, health check  
 - Product: templates, disputes, milestones, ratings, receipts, activity timeline  
 
@@ -96,6 +96,9 @@ PAYPAL_CLIENT_ID=...
 PAYPAL_CLIENT_SECRET=...
 PAYPAL_API_BASE=https://api-m.sandbox.paypal.com
 PAYPAL_MOCK=false
+# Optional magic-link email (shows on /login only when set):
+# RESEND_API_KEY=re_...
+# RESEND_FROM_EMAIL=PayWhenDone <onboarding@resend.dev>
 # After creating a webhook pointing at your public URL:
 # PAYPAL_WEBHOOK_ID=...
 ```

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authClient, useSession } from "@/lib/auth-client";
 
 type PasskeyRow = {
@@ -13,6 +13,7 @@ type PasskeyRow = {
 
 export function AccountPasskeys() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, isPending } = useSession();
   const [passkeys, setPasskeys] = useState<PasskeyRow[]>([]);
   const [name, setName] = useState("MacBook / iPhone");
@@ -32,6 +33,14 @@ export function AccountPasskeys() {
   useEffect(() => {
     if (session) refresh().catch(console.error);
   }, [session]);
+
+  useEffect(() => {
+    if (searchParams.get("nudge") === "passkey") {
+      setInfo(
+        "Enable passwordless: add a passkey below, then next visit use Continue with passkey on Sign in.",
+      );
+    }
+  }, [searchParams]);
 
   async function addPasskey() {
     setBusy(true);
@@ -102,8 +111,8 @@ export function AccountPasskeys() {
       <article className="panel reveal delay-1">
         <h2>Passkeys</h2>
         <p className="muted">
-          Register Face ID / Touch ID / Windows Hello so every future login is
-          one tap — no password.
+          Passwordless for next time: register Face ID / Touch ID / Windows Hello
+          here, then use Continue with passkey on Sign in.
         </p>
 
         {error ? <p className="error">{error}</p> : null}

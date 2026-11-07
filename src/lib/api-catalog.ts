@@ -1,7 +1,7 @@
 export const API_ROUTES = [
   { method: "GET", path: "/api/health", purpose: "Service + DB health" },
   { method: "GET", path: "/api/openapi", purpose: "OpenAPI 3.1 JSON (Swagger)" },
-  { method: "GET/POST", path: "/api/auth/*", purpose: "Better Auth (email + passkeys)" },
+  { method: "GET/POST", path: "/api/auth/*", purpose: "Better Auth (email, passkeys, optional magic link)" },
   { method: "GET", path: "/api/jobs", purpose: "List/filter jobs" },
   { method: "POST", path: "/api/jobs", purpose: "Create escrow job" },
   { method: "GET", path: "/api/jobs/export", purpose: "CSV export of all jobs" },
