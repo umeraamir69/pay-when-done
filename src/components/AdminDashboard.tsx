@@ -6,6 +6,7 @@ import type {
   DashboardStats,
   InvoiceRecord,
   Job,
+  JobCategory,
   JobStatus,
   LedgerEntry,
   PayoutRecord,
@@ -18,6 +19,13 @@ import {
   pct,
   statusLabel,
 } from "@/lib/format";
+import { withTopProgress } from "@/lib/top-progress";
+import {
+  toggleSort,
+  useClientTable,
+  type SortDir,
+} from "@/lib/use-client-table";
+import { BusySpinner, PaginationBar, SortableTh } from "@/components/TableControls";
 
 const STATUS_FILTERS: Array<JobStatus | "all"> = [
   "all",
@@ -32,6 +40,80 @@ const STATUS_FILTERS: Array<JobStatus | "all"> = [
   "voided",
 ];
 
+const CATEGORY_FILTERS: Array<JobCategory | "all"> = [
+  "all",
+  "cleaning",
+  "moving",
+  "tutoring",
+  "handyman",
+  "creative",
+  "other",
+];
+
+const LEDGER_TYPES = [
+  "all",
+  "authorize",
+  "capture",
+  "void",
+  "refund",
+  "invoice",
+  "payout",
+  "sync",
+  "webhook",
+] as const;
+
+function jobSearch(job: Job, q: string) {
+  return [job.title, job.clientName, job.workerName, job.workerEmail, ...job.tags]
+    .join(" ")
+    .toLowerCase()
+    .includes(q);
+}
+
+function jobSortValue(job: Job, key: string) {
+  switch (key) {
+    case "title":
+      return job.title;
+    case "parties":
+      return `${job.clientName} ${job.workerName}`;
+    case "category":
+      return job.category;
+    case "amount":
+      return job.amount;
+    case "status":
+      return job.status;
+    case "updatedAt":
+      return job.updatedAt;
+    default:
+      return null;
+  }
+}
+
+function ledgerSearch(row: LedgerEntry, q: string) {
+  return [row.type, row.jobTitle, row.status, row.paypalId || "", String(row.amount)]
+    .join(" ")
+    .toLowerCase()
+    .includes(q);
+}
+
+function ledgerSortValue(row: LedgerEntry, key: string) {
+  switch (key) {
+    case "at":
+      return row.at;
+    case "type":
+      return row.type;
+    case "jobTitle":
+      return row.jobTitle;
+    case "amount":
+      return row.amount;
+    case "paypalId":
+      return row.paypalId || "";
+    case "status":
+      return row.status;
+    default:
+      return null;
+  }
+}
+
 export function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -40,44 +122,113 @@ export function AdminDashboard() {
   const [payouts, setPayouts] = useState<PayoutRecord[]>([]);
   const [webhooks, setWebhooks] = useState<WebhookEvent[]>([]);
   const [status, setStatus] = useState<JobStatus | "all">("all");
+  const [category, setCategory] = useState<JobCategory | "all">("all");
   const [q, setQ] = useState("");
+  const [ledgerQ, setLedgerQ] = useState("");
+  const [ledgerType, setLedgerType] =
+    useState<(typeof LEDGER_TYPES)[number]>("all");
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const params = new URLSearchParams();
-    if (status !== "all") params.set("status", status);
-    if (q.trim()) params.set("q", q.trim());
+  const [jobSortKey, setJobSortKey] = useState<string | null>("updatedAt");
+  const [jobSortDir, setJobSortDir] = useState<SortDir>("desc");
+  const [jobPage, setJobPage] = useState(1);
+  const [jobPageSize, setJobPageSize] = useState(10);
 
-    const [statsRes, jobsRes, ledgerRes] = await Promise.all([
-      fetch("/api/admin/stats"),
-      fetch(`/api/jobs?${params.toString()}`),
-      fetch("/api/admin/ledger"),
-    ]);
-    const statsJson = await statsRes.json();
-    const jobsJson = await jobsRes.json();
-    const ledgerJson = await ledgerRes.json();
-    setStats(statsJson.stats);
-    setJobs(jobsJson.jobs || []);
-    setLedger(ledgerJson.ledger || []);
-    setInvoices(ledgerJson.invoices || []);
-    setPayouts(ledgerJson.payouts || []);
-    setWebhooks(ledgerJson.webhooks || []);
-  }, [status, q]);
+  const [ledgerSortKey, setLedgerSortKey] = useState<string | null>("at");
+  const [ledgerSortDir, setLedgerSortDir] = useState<SortDir>("desc");
+  const [ledgerPage, setLedgerPage] = useState(1);
+  const [ledgerPageSize, setLedgerPageSize] = useState(10);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      await withTopProgress(async () => {
+        const [statsRes, jobsRes, ledgerRes] = await Promise.all([
+          fetch("/api/admin/stats"),
+          fetch("/api/jobs"),
+          fetch("/api/admin/ledger"),
+        ]);
+        const statsJson = await statsRes.json();
+        const jobsJson = await jobsRes.json();
+        const ledgerJson = await ledgerRes.json();
+        setStats(statsJson.stats);
+        setJobs(jobsJson.jobs || []);
+        setLedger(ledgerJson.ledger || []);
+        setInvoices(ledgerJson.invoices || []);
+        setPayouts(ledgerJson.payouts || []);
+        setWebhooks(ledgerJson.webhooks || []);
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     load().catch(console.error);
   }, [load]);
 
+  useEffect(() => {
+    setJobPage(1);
+  }, [q, status, category, jobPageSize]);
+
+  useEffect(() => {
+    setLedgerPage(1);
+  }, [ledgerQ, ledgerType, ledgerPageSize]);
+
+  const jobFilterFn = useCallback(
+    (job: Job) => {
+      if (status !== "all" && job.status !== status) return false;
+      if (category !== "all" && job.category !== category) return false;
+      return true;
+    },
+    [status, category],
+  );
+
+  const jobsTable = useClientTable({
+    rows: jobs,
+    search: q,
+    searchFn: jobSearch,
+    filterFn: jobFilterFn,
+    sortKey: jobSortKey,
+    sortDir: jobSortDir,
+    getSortValue: jobSortValue,
+    page: jobPage,
+    pageSize: jobPageSize,
+  });
+
+  const ledgerFilterFn = useCallback(
+    (row: LedgerEntry) => {
+      if (ledgerType !== "all" && row.type !== ledgerType) return false;
+      return true;
+    },
+    [ledgerType],
+  );
+
+  const ledgerTable = useClientTable({
+    rows: ledger,
+    search: ledgerQ,
+    searchFn: ledgerSearch,
+    filterFn: ledgerFilterFn,
+    sortKey: ledgerSortKey,
+    sortDir: ledgerSortDir,
+    getSortValue: ledgerSortValue,
+    page: ledgerPage,
+    pageSize: ledgerPageSize,
+  });
+
   async function seedDemo() {
     setBusy(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/admin/seed", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Seed failed");
-      setMessage(`Loaded ${data.count} demo jobs.`);
-      await load();
+      await withTopProgress(async () => {
+        const res = await fetch("/api/admin/seed", { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Seed failed");
+        setMessage(`Loaded ${data.count} demo jobs.`);
+        await load();
+      });
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Seed failed");
     } finally {
@@ -89,16 +240,34 @@ export function AdminDashboard() {
     setBusy(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/jobs/${jobId}/${action}`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `${action} failed`);
-      setMessage(`${action === "release" ? "Released" : "Voided"} successfully.`);
-      await load();
+      await withTopProgress(async () => {
+        const res = await fetch(`/api/jobs/${jobId}/${action}`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `${action} failed`);
+        setMessage(
+          `${action === "release" ? "Released" : "Voided"} successfully.`,
+        );
+        await load();
+      });
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Action failed");
     } finally {
       setBusy(false);
     }
+  }
+
+  function onJobSort(column: string) {
+    const next = toggleSort(jobSortKey, jobSortDir, column);
+    setJobSortKey(next.key);
+    setJobSortDir(next.dir);
+  }
+
+  function onLedgerSort(column: string) {
+    const next = toggleSort(ledgerSortKey, ledgerSortDir, column);
+    setLedgerSortKey(next.key);
+    setLedgerSortDir(next.dir);
   }
 
   const statusBars = useMemo(() => {
@@ -130,9 +299,9 @@ export function AdminDashboard() {
             type="button"
             className="btn-ghost"
             onClick={seedDemo}
-            disabled={busy}
+            disabled={busy || loading}
           >
-            {busy ? "Working…" : "Load demo data"}
+            {busy ? <BusySpinner label="Working…" /> : "Load demo data"}
           </button>
           <Link href="/create" className="btn-primary">
             New job
@@ -186,7 +355,9 @@ export function AdminDashboard() {
           </article>
         </div>
       ) : (
-        <p className="muted">Loading metrics…</p>
+        <p className="muted panel-loading">
+          <BusySpinner label="Loading metrics…" />
+        </p>
       )}
 
       <div className="admin-columns">
@@ -229,25 +400,50 @@ export function AdminDashboard() {
       </div>
 
       <section className="panel">
-        <h2>PayPal ledger</h2>
-        <p className="muted">
-          Every authorize, capture, void, invoice, payout, refund, sync, and
-          webhook — persisted in the local database.
-        </p>
-        <div className="table-wrap">
+        <div className="table-toolbar">
+          <div>
+            <h2>PayPal ledger</h2>
+            <p className="muted" style={{ margin: "0.35rem 0 0" }}>
+              Authorize, capture, void, invoice, payout, refund, sync, and
+              webhook events.
+            </p>
+          </div>
+          <div className="toolbar-controls">
+            <input
+              value={ledgerQ}
+              onChange={(e) => setLedgerQ(e.target.value)}
+              placeholder="Search ledger…"
+              aria-label="Search ledger"
+            />
+            <select
+              value={ledgerType}
+              onChange={(e) =>
+                setLedgerType(e.target.value as (typeof LEDGER_TYPES)[number])
+              }
+              aria-label="Filter ledger type"
+            >
+              {LEDGER_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t === "all" ? "All types" : t}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className={`table-wrap${loading ? " is-loading" : ""}`}>
           <table className="admin-table">
             <thead>
               <tr>
-                <th>When</th>
-                <th>Type</th>
-                <th>Job</th>
-                <th>Amount</th>
-                <th>PayPal ID</th>
-                <th>Status</th>
+                <SortableTh label="When" column="at" sortKey={ledgerSortKey} sortDir={ledgerSortDir} onSort={onLedgerSort} />
+                <SortableTh label="Type" column="type" sortKey={ledgerSortKey} sortDir={ledgerSortDir} onSort={onLedgerSort} />
+                <SortableTh label="Job" column="jobTitle" sortKey={ledgerSortKey} sortDir={ledgerSortDir} onSort={onLedgerSort} />
+                <SortableTh label="Amount" column="amount" sortKey={ledgerSortKey} sortDir={ledgerSortDir} onSort={onLedgerSort} />
+                <SortableTh label="PayPal ID" column="paypalId" sortKey={ledgerSortKey} sortDir={ledgerSortDir} onSort={onLedgerSort} />
+                <SortableTh label="Status" column="status" sortKey={ledgerSortKey} sortDir={ledgerSortDir} onSort={onLedgerSort} />
               </tr>
             </thead>
             <tbody>
-              {ledger.slice(0, 20).map((row) => (
+              {ledgerTable.rows.map((row) => (
                 <tr key={row.id}>
                   <td>{formatDate(row.at)}</td>
                   <td>{row.type}</td>
@@ -266,10 +462,20 @@ export function AdminDashboard() {
               ))}
             </tbody>
           </table>
-          {!ledger.length ? (
+          {!ledgerTable.total ? (
             <p className="muted">No ledger entries yet.</p>
           ) : null}
         </div>
+        <PaginationBar
+          page={ledgerTable.page}
+          pageCount={ledgerTable.pageCount}
+          total={ledgerTable.total}
+          rangeStart={ledgerTable.rangeStart}
+          rangeEnd={ledgerTable.rangeEnd}
+          onPageChange={setLedgerPage}
+          pageSize={ledgerPageSize}
+          onPageSizeChange={setLedgerPageSize}
+        />
         <div className="mini-stats">
           <span>{invoices.length} invoices</span>
           <span>{payouts.length} payouts</span>
@@ -285,10 +491,12 @@ export function AdminDashboard() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search title, client, worker…"
+              aria-label="Search jobs"
             />
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as JobStatus | "all")}
+              aria-label="Filter by status"
             >
               {STATUS_FILTERS.map((s) => (
                 <option key={s} value={s}>
@@ -296,24 +504,37 @@ export function AdminDashboard() {
                 </option>
               ))}
             </select>
+            <select
+              value={category}
+              onChange={(e) =>
+                setCategory(e.target.value as JobCategory | "all")
+              }
+              aria-label="Filter by category"
+            >
+              {CATEGORY_FILTERS.map((c) => (
+                <option key={c} value={c}>
+                  {c === "all" ? "All categories" : categoryLabel(c)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        <div className="table-wrap">
+        <div className={`table-wrap${loading ? " is-loading" : ""}`}>
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Job</th>
-                <th>Parties</th>
-                <th>Category</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Updated</th>
+                <SortableTh label="Job" column="title" sortKey={jobSortKey} sortDir={jobSortDir} onSort={onJobSort} />
+                <SortableTh label="Parties" column="parties" sortKey={jobSortKey} sortDir={jobSortDir} onSort={onJobSort} />
+                <SortableTh label="Category" column="category" sortKey={jobSortKey} sortDir={jobSortDir} onSort={onJobSort} />
+                <SortableTh label="Amount" column="amount" sortKey={jobSortKey} sortDir={jobSortDir} onSort={onJobSort} />
+                <SortableTh label="Status" column="status" sortKey={jobSortKey} sortDir={jobSortDir} onSort={onJobSort} />
+                <SortableTh label="Updated" column="updatedAt" sortKey={jobSortKey} sortDir={jobSortDir} onSort={onJobSort} />
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job) => (
+              {jobsTable.rows.map((job) => (
                 <tr key={job.id}>
                   <td>
                     <Link href={`/jobs/${job.id}`}>
@@ -367,12 +588,22 @@ export function AdminDashboard() {
               ))}
             </tbody>
           </table>
-          {!jobs.length ? (
+          {!jobsTable.total ? (
             <p className="muted" style={{ padding: "1rem 0 0" }}>
               No jobs match. Load demo data or create a job.
             </p>
           ) : null}
         </div>
+        <PaginationBar
+          page={jobsTable.page}
+          pageCount={jobsTable.pageCount}
+          total={jobsTable.total}
+          rangeStart={jobsTable.rangeStart}
+          rangeEnd={jobsTable.rangeEnd}
+          onPageChange={setJobPage}
+          pageSize={jobPageSize}
+          onPageSizeChange={setJobPageSize}
+        />
       </section>
     </div>
   );

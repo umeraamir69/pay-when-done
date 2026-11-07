@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Job } from "@/lib/types";
 import { formatDate, formatMoney } from "@/lib/format";
+import { withTopProgress } from "@/lib/top-progress";
 
 type Props = {
   job: Job;
@@ -22,19 +23,21 @@ export function PayPalPaymentsPanel({ job, onUpdate }: Props) {
     setError(null);
     setInfo(null);
     try {
-      const res = await fetch(`/api/jobs/${job.id}/${path}`, {
-        method: "POST",
-        headers: body ? { "Content-Type": "application/json" } : undefined,
-        body: body ? JSON.stringify(body) : undefined,
+      await withTopProgress(async () => {
+        const res = await fetch(`/api/jobs/${job.id}/${path}`, {
+          method: "POST",
+          headers: body ? { "Content-Type": "application/json" } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `${action} failed`);
+        if (data.job) onUpdate(data.job);
+        setInfo(
+          data.mock
+            ? `${action} completed (PayPal mock mode).`
+            : `${action} completed via PayPal API.`,
+        );
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `${action} failed`);
-      if (data.job) onUpdate(data.job);
-      setInfo(
-        data.mock
-          ? `${action} completed (PayPal mock mode).`
-          : `${action} completed via PayPal API.`,
-      );
     } catch (err) {
       setError(err instanceof Error ? err.message : `${action} failed`);
     } finally {

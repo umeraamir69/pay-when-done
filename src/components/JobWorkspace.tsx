@@ -10,6 +10,8 @@ import {
   priorityLabel,
   statusLabel,
 } from "@/lib/format";
+import { withTopProgress } from "@/lib/top-progress";
+import { BusySpinner } from "@/components/TableControls";
 import { PayPalFundButton } from "./PayPalFundButton";
 import { PayPalPaymentsPanel } from "./PayPalPaymentsPanel";
 
@@ -59,6 +61,22 @@ export function JobWorkspace({ initialJob }: Props) {
     [job.status],
   );
 
+  async function runBusy(
+    key: string,
+    fn: () => Promise<void>,
+    fallback: string,
+  ) {
+    setBusy(key);
+    setError(null);
+    try {
+      await withTopProgress(fn);
+      if (key !== "duplicate") setBusy(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : fallback);
+      setBusy(null);
+    }
+  }
+
   async function onFile(file: File | null) {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -75,199 +93,186 @@ export function JobWorkspace({ initialJob }: Props) {
       setError("Add a photo and notes that map to the brief.");
       return;
     }
-    setBusy("proof");
-    setError(null);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/proof`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          proofNotes: notes,
-          proofImageDataUrl: imageDataUrl,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Proof upload failed");
-      setJob(data.job);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Proof failed");
-    } finally {
-      setBusy(null);
-    }
+    await runBusy(
+      "proof",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/proof`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            proofNotes: notes,
+            proofImageDataUrl: imageDataUrl,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Proof upload failed");
+        setJob(data.job);
+      },
+      "Proof failed",
+    );
   }
 
   async function runVerify() {
-    setBusy("verify");
-    setError(null);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/verify`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Verify failed");
-      setJob(data.job);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Verify failed");
-    } finally {
-      setBusy(null);
-    }
+    await runBusy(
+      "verify",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/verify`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Verify failed");
+        setJob(data.job);
+      },
+      "Verify failed",
+    );
   }
 
   async function release() {
-    setBusy("release");
-    setError(null);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/release`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Release failed");
-      setJob(data.job);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Release failed");
-    } finally {
-      setBusy(null);
-    }
+    await runBusy(
+      "release",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/release`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Release failed");
+        setJob(data.job);
+      },
+      "Release failed",
+    );
   }
 
   async function voidJob() {
-    setBusy("void");
-    setError(null);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/void`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Void failed");
-      setJob(data.job);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Void failed");
-    } finally {
-      setBusy(null);
-    }
+    await runBusy(
+      "void",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/void`, { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Void failed");
+        setJob(data.job);
+      },
+      "Void failed",
+    );
   }
 
   async function sendDispute() {
     if (!disputeBody.trim()) return;
-    setBusy("dispute");
-    setError(null);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/dispute`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          author: disputeAuthor,
-          authorName:
-            disputeAuthor === "client"
-              ? job.clientName
-              : disputeAuthor === "worker"
-                ? job.workerName
-                : "Admin",
-          body: disputeBody,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Dispute failed");
-      setJob(data.job);
-      setDisputeBody("");
-      setTab("disputes");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Dispute failed");
-    } finally {
-      setBusy(null);
-    }
+    await runBusy(
+      "dispute",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/dispute`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            author: disputeAuthor,
+            authorName:
+              disputeAuthor === "client"
+                ? job.clientName
+                : disputeAuthor === "worker"
+                  ? job.workerName
+                  : "Admin",
+            body: disputeBody,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Dispute failed");
+        setJob(data.job);
+        setDisputeBody("");
+        setTab("disputes");
+      },
+      "Dispute failed",
+    );
   }
 
   async function addMilestone() {
-    setBusy("milestone");
-    setError(null);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/milestones`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: milestoneTitle,
-          amount: Number(milestoneAmount),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Milestone failed");
-      setJob(data.job);
-      setMilestoneTitle("");
-      setMilestoneAmount("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Milestone failed");
-    } finally {
-      setBusy(null);
-    }
+    await runBusy(
+      "milestone",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/milestones`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: milestoneTitle,
+            amount: Number(milestoneAmount),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Milestone failed");
+        setJob(data.job);
+        setMilestoneTitle("");
+        setMilestoneAmount("");
+      },
+      "Milestone failed",
+    );
   }
 
   async function patchMilestone(
     milestoneId: string,
     status: "pending" | "funded" | "completed" | "paid",
   ) {
-    setBusy("milestone");
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/milestones`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ milestoneId, status }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Update failed");
-      setJob(data.job);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Update failed");
-    } finally {
-      setBusy(null);
-    }
+    await runBusy(
+      "milestone",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/milestones`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ milestoneId, status }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Update failed");
+        setJob(data.job);
+      },
+      "Update failed",
+    );
   }
 
   async function saveNotes() {
-    setBusy("notes");
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ internalNotes }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Save failed");
-      setJob(data.job);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
-    } finally {
-      setBusy(null);
-    }
+    await runBusy(
+      "notes",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/notes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ internalNotes }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Save failed");
+        setJob(data.job);
+      },
+      "Save failed",
+    );
   }
 
   async function duplicateJob() {
-    setBusy("duplicate");
-    setError(null);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/duplicate`, {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Duplicate failed");
-      window.location.href = `/jobs/${data.job.id}`;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Duplicate failed");
-      setBusy(null);
-    }
+    await runBusy(
+      "duplicate",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/duplicate`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Duplicate failed");
+        window.location.href = `/jobs/${data.job.id}`;
+      },
+      "Duplicate failed",
+    );
   }
 
   async function rateWorker(rating: number) {
-    setBusy("rate");
-    setError(null);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/rate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Rating failed");
-      setJob(data.job);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Rating failed");
-    } finally {
-      setBusy(null);
-    }
+    await runBusy(
+      "rate",
+      async () => {
+        const res = await fetch(`/api/jobs/${job.id}/rate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rating }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Rating failed");
+        setJob(data.job);
+      },
+      "Rating failed",
+    );
   }
 
   return (
@@ -420,7 +425,7 @@ export function JobWorkspace({ initialJob }: Props) {
                     onClick={submitProof}
                     disabled={busy === "proof"}
                   >
-                    {busy === "proof" ? "Uploading…" : "Submit proof"}
+                    {busy === "proof" ? <BusySpinner label="Uploading…" /> : "Submit proof"}
                   </button>
                   <button
                     type="button"
@@ -452,7 +457,11 @@ export function JobWorkspace({ initialJob }: Props) {
                   onClick={runVerify}
                   disabled={busy === "verify"}
                 >
-                  {busy === "verify" ? "Muse is checking…" : "Verify with Muse AI"}
+                  {busy === "verify" ? (
+                    <BusySpinner label="Muse is checking…" />
+                  ) : (
+                    "Verify with Muse AI"
+                  )}
                 </button>
               </article>
             ) : null}
@@ -620,7 +629,7 @@ export function JobWorkspace({ initialJob }: Props) {
               onClick={sendDispute}
               disabled={busy === "dispute"}
             >
-              {busy === "dispute" ? "Sending…" : "Post dispute note"}
+              {busy === "dispute" ? <BusySpinner label="Sending…" /> : "Post dispute note"}
             </button>
           </article>
         ) : null}
@@ -731,7 +740,7 @@ export function JobWorkspace({ initialJob }: Props) {
                 onClick={saveNotes}
                 disabled={busy === "notes"}
               >
-                {busy === "notes" ? "Saving…" : "Save notes"}
+                {busy === "notes" ? <BusySpinner label="Saving…" /> : "Save notes"}
               </button>
               <Link href="/admin" className="btn-ghost">
                 Admin dashboard
