@@ -5,13 +5,20 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { BrandMark } from "@/components/BrandMark";
+import { NavIcon, type NavIconName } from "@/components/NavIcons";
 
-const marketingLinks = [
-  { href: "/about", label: "About" },
-  { href: "/how-it-works", label: "How it works" },
-  { href: "/templates", label: "Templates" },
-  { href: "/jobs", label: "Jobs" },
-  { href: "/docs", label: "Docs" },
+type NavLink = {
+  href: string;
+  label: string;
+  icon: NavIconName;
+};
+
+const marketingLinks: NavLink[] = [
+  { href: "/about", label: "About", icon: "about" },
+  { href: "/how-it-works", label: "How it works", icon: "how" },
+  { href: "/templates", label: "Templates", icon: "templates" },
+  { href: "/jobs", label: "Jobs", icon: "jobs" },
+  { href: "/docs", label: "Docs", icon: "docs" },
 ];
 
 function linkActive(pathname: string, href: string) {
@@ -54,10 +61,14 @@ export function SiteHeader() {
         <Link
           key={link.href}
           href={link.href}
-          className={linkActive(pathname, link.href) ? "active" : undefined}
+          className={
+            linkActive(pathname, link.href) ? "nav-link active" : "nav-link"
+          }
+          aria-current={linkActive(pathname, link.href) ? "page" : undefined}
           onClick={() => setOpen(false)}
         >
-          {link.label}
+          <NavIcon name={link.icon} size={15} />
+          <span>{link.label}</span>
         </Link>
       ))}
       {session ? (
@@ -65,12 +76,14 @@ export function SiteHeader() {
           href="/create"
           className={
             linkActive(pathname, "/create")
-              ? "active header-nav-create"
-              : "header-nav-create"
+              ? "nav-link active header-nav-create"
+              : "nav-link header-nav-create"
           }
+          aria-current={linkActive(pathname, "/create") ? "page" : undefined}
           onClick={() => setOpen(false)}
         >
-          New job
+          <NavIcon name="create" size={15} />
+          <span>New job</span>
         </Link>
       ) : null}
     </>
@@ -80,47 +93,53 @@ export function SiteHeader() {
     <>
       <Link
         href="/notifications"
-        className="header-settings"
+        className="header-settings nav-link"
         onClick={() => setOpen(false)}
       >
-        Alerts
+        <NavIcon name="alerts" size={15} />
+        <span>Alerts</span>
       </Link>
       <Link
         href="/account"
         className="header-account"
         onClick={() => setOpen(false)}
       >
-        <span className="header-account-label">Account</span>
-        <span className="header-account-name">
-          {session.user.name || session.user.email}
+        <NavIcon name="account" size={16} className="header-account-icon" />
+        <span className="header-account-copy">
+          <span className="header-account-label">Account</span>
+          <span className="header-account-name">
+            {session.user.name || session.user.email}
+          </span>
         </span>
       </Link>
       <button
         type="button"
-        className="btn-ghost header-cta"
+        className="btn-ghost header-cta nav-link"
         onClick={() => {
           setOpen(false);
           void signOut();
         }}
       >
-        Sign out
+        <NavIcon name="logout" size={15} />
+        <span>Sign out</span>
       </button>
     </>
   ) : (
     <>
       <Link
         href="/login"
-        className="header-settings"
+        className="header-settings nav-link"
         onClick={() => setOpen(false)}
       >
-        Sign in
+        <NavIcon name="login" size={15} />
+        <span>Sign in</span>
       </Link>
       <Link
         href="/signup"
-        className="btn-primary header-cta"
+        className="btn-primary header-cta nav-link"
         onClick={() => setOpen(false)}
       >
-        Get started
+        <span>Get started</span>
       </Link>
     </>
   );
@@ -142,9 +161,10 @@ export function SiteHeader() {
         className="header-menu-btn"
         aria-expanded={open}
         aria-controls={menuId}
+        aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen((value) => !value)}
       >
-        <span className="header-menu-icon" aria-hidden="true" />
+        <NavIcon name={open ? "close" : "menu"} size={16} />
         <span className="header-menu-text">{open ? "Close" : "Menu"}</span>
       </button>
 

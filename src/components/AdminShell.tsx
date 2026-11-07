@@ -4,28 +4,45 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { signOut, useSession } from "@/lib/auth-client";
+import { NavIcon, type NavIconName } from "@/components/NavIcons";
 
 type NavItem = {
   href: string;
   label: string;
+  icon: NavIconName;
   match?: "exact" | "prefix";
 };
 
 const consoleNav: NavItem[] = [
-  { href: "/admin", label: "Dashboard", match: "exact" },
-  { href: "/admin/jobs", label: "Jobs", match: "prefix" },
-  { href: "/admin/ledger", label: "Ledger", match: "prefix" },
-  { href: "/admin/invoices", label: "Invoices", match: "prefix" },
-  { href: "/admin/payouts", label: "Payouts", match: "prefix" },
-  { href: "/admin/webhooks", label: "Webhooks", match: "prefix" },
+  { href: "/admin", label: "Dashboard", icon: "dashboard", match: "exact" },
+  { href: "/admin/jobs", label: "Jobs", icon: "jobs", match: "prefix" },
+  { href: "/admin/ledger", label: "Ledger", icon: "ledger", match: "prefix" },
+  {
+    href: "/admin/invoices",
+    label: "Invoices",
+    icon: "invoices",
+    match: "prefix",
+  },
+  { href: "/admin/payouts", label: "Payouts", icon: "payouts", match: "prefix" },
+  {
+    href: "/admin/webhooks",
+    label: "Webhooks",
+    icon: "webhooks",
+    match: "prefix",
+  },
 ];
 
 const workspaceNav: NavItem[] = [
-  { href: "/jobs", label: "Jobs board", match: "prefix" },
-  { href: "/create", label: "New job", match: "exact" },
-  { href: "/settings", label: "Settings", match: "prefix" },
-  { href: "/notifications", label: "Alerts", match: "prefix" },
-  { href: "/docs", label: "Docs", match: "prefix" },
+  { href: "/jobs", label: "Jobs board", icon: "jobs", match: "prefix" },
+  { href: "/create", label: "New job", icon: "create", match: "exact" },
+  { href: "/settings", label: "Settings", icon: "settings", match: "prefix" },
+  {
+    href: "/notifications",
+    label: "Alerts",
+    icon: "alerts",
+    match: "prefix",
+  },
+  { href: "/docs", label: "Docs", icon: "docs", match: "prefix" },
 ];
 
 function isActive(pathname: string, item: NavItem) {
@@ -63,7 +80,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           aria-current={active ? "page" : undefined}
           onClick={() => setOpen(false)}
         >
-          {item.label}
+          <NavIcon name={item.icon} size={15} />
+          <span>{item.label}</span>
         </Link>
       );
     });
@@ -79,7 +97,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           aria-controls="admin-sidebar"
           onClick={() => setOpen((value) => !value)}
         >
-          <span className="admin-menu-icon" aria-hidden="true" />
+          <NavIcon name={open ? "close" : "menu"} size={16} />
           Menu
         </button>
         <Link href="/admin" className="admin-mobile-brand">
@@ -134,14 +152,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           )}
           <div className="admin-sidebar-actions">
             <Link href="/" className="admin-nav-link">
-              Back to site
+              <NavIcon name="home" size={15} />
+              <span>Back to site</span>
             </Link>
             <button
               type="button"
               className="admin-signout"
               onClick={() => signOut()}
             >
-              Sign out
+              <NavIcon name="logout" size={15} />
+              <span>Sign out</span>
             </button>
           </div>
         </div>

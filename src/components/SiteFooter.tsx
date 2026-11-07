@@ -3,28 +3,59 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
+import { NavIcon, type NavIconName } from "@/components/NavIcons";
 
-const productLinks = [
-  { href: "/about", label: "About" },
-  { href: "/how-it-works", label: "How it works" },
-  { href: "/templates", label: "Templates" },
-  { href: "/jobs", label: "Jobs" },
-  { href: "/faq", label: "FAQ" },
+type FooterLink = {
+  href: string;
+  label: string;
+  icon: NavIconName;
+};
+
+const productLinks: FooterLink[] = [
+  { href: "/about", label: "About", icon: "about" },
+  { href: "/how-it-works", label: "How it works", icon: "how" },
+  { href: "/templates", label: "Templates", icon: "templates" },
+  { href: "/jobs", label: "Jobs", icon: "jobs" },
+  { href: "/faq", label: "FAQ", icon: "faq" },
 ];
 
-const resourceLinks = [
-  { href: "/docs", label: "Docs" },
-  { href: "/docs/features", label: "Features" },
-  { href: "/docs/api", label: "API" },
-  { href: "/create", label: "New job" },
+const resourceLinks: FooterLink[] = [
+  { href: "/docs", label: "Docs", icon: "docs" },
+  { href: "/docs/features", label: "Features", icon: "features" },
+  { href: "/docs/api", label: "API", icon: "api" },
+  { href: "/create", label: "New job", icon: "create" },
 ];
 
-const accountLinks = [
-  { href: "/account", label: "Account" },
-  { href: "/settings", label: "Settings" },
-  { href: "/notifications", label: "Alerts" },
-  { href: "/login", label: "Sign in" },
+const accountLinks: FooterLink[] = [
+  { href: "/account", label: "Account", icon: "account" },
+  { href: "/settings", label: "Settings", icon: "settings" },
+  { href: "/notifications", label: "Alerts", icon: "alerts" },
+  { href: "/login", label: "Sign in", icon: "login" },
 ];
+
+function FooterLinkList({
+  links,
+  label,
+}: {
+  links: FooterLink[];
+  label: string;
+}) {
+  return (
+    <nav className="footer-col" aria-label={label}>
+      <h2 className="footer-heading">{label}</h2>
+      <ul className="footer-links">
+        {links.map((link) => (
+          <li key={link.href}>
+            <Link href={link.href} className="footer-link">
+              <NavIcon name={link.icon} size={14} className="footer-link-icon" />
+              <span>{link.label}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
 
 export function SiteFooter() {
   const pathname = usePathname();
@@ -46,38 +77,9 @@ export function SiteFooter() {
           <p className="footer-stack">PayPal · Muse AI · Better Auth</p>
         </div>
 
-        <nav className="footer-col" aria-label="Product">
-          <h2 className="footer-heading">Product</h2>
-          <ul className="footer-links">
-            {productLinks.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href}>{link.label}</Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <nav className="footer-col" aria-label="Resources">
-          <h2 className="footer-heading">Resources</h2>
-          <ul className="footer-links">
-            {resourceLinks.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href}>{link.label}</Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <nav className="footer-col" aria-label="Account">
-          <h2 className="footer-heading">Account</h2>
-          <ul className="footer-links">
-            {accountLinks.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href}>{link.label}</Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <FooterLinkList links={productLinks} label="Product" />
+        <FooterLinkList links={resourceLinks} label="Resources" />
+        <FooterLinkList links={accountLinks} label="Account" />
       </div>
 
       <div className="footer-bottom">
