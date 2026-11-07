@@ -23,6 +23,10 @@ export const metadata: Metadata = {
   },
   description:
     "Hold PayPal payment until Muse AI verifies the work matches the brief. Escrow for cleaners, tutors, movers, and handymen hired off-platform.",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
