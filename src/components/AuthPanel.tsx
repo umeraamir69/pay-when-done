@@ -12,15 +12,22 @@ export function AuthPanel({ mode }: { mode: Mode }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setBusy("form");
     setError(null);
     setInfo(null);
+
+    if (mode === "signup" && password !== confirmPassword) {
+      setError("Passwords do not match. Please confirm your password.");
+      return;
+    }
+
+    setBusy("form");
     try {
       if (mode === "signup") {
         const { error: err } = await authClient.signUp.email({
@@ -104,6 +111,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Alex Rivera"
                 required
+                disabled={busy !== null}
               />
             </label>
           ) : null}
@@ -115,6 +123,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={busy !== null}
             />
           </label>
           <label>
@@ -128,8 +137,23 @@ export function AuthPanel({ mode }: { mode: Mode }) {
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
               required
+              disabled={busy !== null}
             />
           </label>
+          {mode === "signup" ? (
+            <label>
+              Confirm password
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                minLength={8}
+                required
+                disabled={busy !== null}
+              />
+            </label>
+          ) : null}
 
           {error ? <p className="error">{error}</p> : null}
           {info ? <p className="banner">{info}</p> : null}
