@@ -15,7 +15,7 @@ export function AccountPasskeys() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const [passkeys, setPasskeys] = useState<PasskeyRow[]>([]);
-  const [name, setName] = useState("MacBook / iPhone");
+  const [name, setName] = useState("This device");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -36,16 +36,45 @@ export function AccountPasskeys() {
   async function addPasskey() {
     setBusy(true);
     setError(null);
-    setInfo(null);
+    setInfo(
+      "Approve the browser / OS prompt (Face ID, Touch ID, or security key)…",
+    );
+    const timeoutMs = 45_000;
+    const timeout = new Promise<never>((_, reject) => {
+      window.setTimeout(() => reject(new Error("Passkey timed out")), timeoutMs);
+    });
     try {
-      const { error: err } = await authClient.passkey.addPasskey({
-        name: name || "My passkey",
-      });
-      if (err) throw new Error(err.message || "Could not add passkey");
-      setInfo("Passkey saved. Next visit you can sign in with it.");
+      const result = await Promise.race([
+        authClient.passkey.addPasskey({
+          name: name || "My passkey",
+        }),
+        timeout,
+      ]);
+      if (result?.error) {
+        throw new Error(result.error.message || "Could not add passkey");
+      }
+      setInfo(
+        "Passkey saved. On your next visit, use Continue with passkey on the login page.",
+      );
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Passkey registration failed");
+      const message =
+        err instanceof Error ? err.message : "Passkey registration failed";
+      const lower = message.toLowerCase();
+      if (
+        lower.includes("abort") ||
+        lower.includes("cancel") ||
+        lower.includes("not allowed") ||
+        lower.includes("timed out") ||
+        lower.includes("timeout")
+      ) {
+        setError(
+          "Passkey cancelled or timed out. Email/password still works — try again when ready.",
+        );
+      } else {
+        setError(message);
+      }
+      setInfo(null);
     } finally {
       setBusy(false);
     }
@@ -102,8 +131,8 @@ export function AccountPasskeys() {
       <article className="panel reveal delay-1">
         <h2>Passkeys</h2>
         <p className="muted">
-          Register Face ID / Touch ID / Windows Hello so every future login is
-          one tap — no password.
+          Optional. Add Face ID / Touch ID / Windows Hello here after you are
+          signed in. Next visit, use Continue with passkey on the login page.
         </p>
 
         {error ? <p className="error">{error}</p> : null}

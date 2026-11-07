@@ -34,7 +34,7 @@ export default async function SettingsPage() {
       <p className="eyebrow">Configuration</p>
       <h1>Settings & storage</h1>
       <p className="lede narrow">
-        Auth (passkeys), Prisma SQLite database, PayPal APIs, and Muse AI status.
+        Auth (passkeys), Neon Postgres, PayPal APIs, and Muse AI status.
       </p>
 
       <div className="settings-grid">
