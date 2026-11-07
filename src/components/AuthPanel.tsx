@@ -26,7 +26,6 @@ export function AuthPanel({ mode }: { mode: Mode }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   /** Passkey errors are isolated so email flow never inherits them. */
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
 
@@ -34,11 +33,10 @@ export function AuthPanel({ mode }: { mode: Mode }) {
   const passkeyAttemptRef = useRef(0);
   const passkeyAbortRef = useRef<AbortController | null>(null);
 
-  // Clear sticky error/info from prior visits / remounts. Never start WebAuthn here.
+  // Clear sticky error from prior visits / remounts. Never start WebAuthn here.
   useEffect(() => {
     mountedRef.current = true;
     setError(null);
-    setInfo(null);
     setPasskeyError(null);
     setBusy(null);
 
@@ -62,7 +60,6 @@ export function AuthPanel({ mode }: { mode: Mode }) {
     setBusy("form");
     setError(null);
     setPasskeyError(null);
-    setInfo(null);
 
     if (mode === "signup" && password !== confirmPassword) {
       setError("Passwords do not match");
@@ -78,7 +75,6 @@ export function AuthPanel({ mode }: { mode: Mode }) {
           name: name || email.split("@")[0],
         });
         if (err) throw new Error(err.message || "Sign up failed");
-        setInfo("Account created. Optional: add a passkey from Account.");
         router.push("/account");
         router.refresh();
         return;
@@ -110,7 +106,6 @@ export function AuthPanel({ mode }: { mode: Mode }) {
     setBusy("passkey");
     setError(null);
     setPasskeyError(null);
-    setInfo(null);
 
     const timeoutId = window.setTimeout(() => {
       ac.abort();
@@ -143,10 +138,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
       if (!stillCurrent()) return;
 
       if (err) {
-        setPasskeyError(
-          err.message ||
-            "Passkey sign-in failed. Sign in with email, then add a passkey from Account.",
-        );
+        setPasskeyError(err.message || "Passkey sign-in failed");
         return;
       }
 
@@ -156,16 +148,12 @@ export function AuthPanel({ mode }: { mode: Mode }) {
       if (!stillCurrent()) return;
 
       if (isAbortError(err) || ac.signal.aborted) {
-        setPasskeyError(
-          "Passkey cancelled or timed out. Sign in with email instead, then add a passkey from Account.",
-        );
+        setPasskeyError("Passkey cancelled or timed out");
         return;
       }
 
       setPasskeyError(
-        err instanceof Error
-          ? err.message
-          : "Passkey failed — register one from Account after email login",
+        err instanceof Error ? err.message : "Passkey sign-in failed",
       );
     } finally {
       window.clearTimeout(timeoutId);
@@ -185,8 +173,8 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         <h1>{mode === "login" ? "Sign in" : "Sign up"}</h1>
         <p className="muted">
           {mode === "login"
-            ? "Sign in with email and password. Passkey is only for return visits after you add one on Account."
-            : "Create an account with email. Add Face ID / Touch ID later from Account if you want."}
+            ? "Enter your email and password to continue."
+            : "Create an account with email and password."}
         </p>
 
         <form className="panel-form" onSubmit={onSubmit}>
@@ -243,7 +231,6 @@ export function AuthPanel({ mode }: { mode: Mode }) {
           ) : null}
 
           {error ? <p className="error">{error}</p> : null}
-          {info ? <p className="banner">{info}</p> : null}
 
           <button
             type="submit"
@@ -253,7 +240,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
             {busy === "form"
               ? "Please wait…"
               : mode === "login"
-                ? "Sign in with email"
+                ? "Sign in"
                 : "Create account"}
           </button>
         </form>
@@ -261,7 +248,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         {mode === "login" ? (
           <>
             <div className="auth-divider">
-              <span>or return with passkey</span>
+              <span>or</span>
             </div>
             <button
               type="button"
@@ -270,21 +257,12 @@ export function AuthPanel({ mode }: { mode: Mode }) {
               disabled={busy !== null}
             >
               {busy === "passkey"
-                ? "Waiting for authenticator… (cancel if stuck)"
-                : "Continue with passkey"}
+                ? "Waiting for authenticator…"
+                : "Sign in with passkey"}
             </button>
             {passkeyError ? <p className="error">{passkeyError}</p> : null}
-            <p className="muted auth-passkey-hint">
-              Only after you add a passkey on{" "}
-              <Link href="/account">Account</Link>. New here? Use email first.
-            </p>
           </>
-        ) : (
-          <p className="muted auth-passkey-hint">
-            After signup, open Account to register a passkey for one-tap return
-            visits. Passkeys are not created during signup.
-          </p>
-        )}
+        ) : null}
 
         <p className="auth-switch muted">
           {mode === "login" ? (
