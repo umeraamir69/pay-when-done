@@ -19,51 +19,53 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <Link href="/" className="brand">
-        PayWhenDone
-      </Link>
-      <nav>
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={
-              pathname === link.href || pathname.startsWith(`${link.href}/`)
-                ? "active"
-                : undefined
-            }
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="header-actions">
-        {session ? (
-          <>
-            <Link href="/notifications" className="header-settings">
-              Alerts
-            </Link>
-            <Link href="/account" className="header-settings">
-              {session.user.name || "Account"}
-            </Link>
-            <button
-              type="button"
-              className="btn-ghost header-cta"
-              onClick={() => signOut()}
+      <div className="header-inner">
+        <Link href="/" className="brand">
+          PayWhenDone
+        </Link>
+        <nav>
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={
+                pathname === link.href || pathname.startsWith(`${link.href}/`)
+                  ? "active"
+                  : undefined
+              }
             >
-              Sign out
-            </button>
-          </>
-        ) : (
-          <>
-            <Link href="/login" className="header-settings">
-              Sign in
+              {link.label}
             </Link>
-            <Link href="/signup" className="btn-primary header-cta">
-              Get started
-            </Link>
-          </>
-        )}
+          ))}
+        </nav>
+        <div className="header-actions">
+          {session ? (
+            <>
+              <Link href="/notifications" className="header-settings">
+                Alerts
+              </Link>
+              <Link href="/account" className="header-settings">
+                {session.user.name || "Account"}
+              </Link>
+              <button
+                type="button"
+                className="btn-ghost header-cta"
+                onClick={() => signOut()}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="header-settings">
+                Sign in
+              </Link>
+              <Link href="/signup" className="btn-primary header-cta">
+                Get started
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
