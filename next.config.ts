@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
   turbopack: {
     rules: {
       "*.css": {
@@ -11,6 +8,11 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  // Ship seeded SQLite DB into serverless functions (Vercel /tmp copy at runtime).
+  outputFileTracingIncludes: {
+    "/api/**/*": ["./prisma/**/*.db", "./prisma/schema.prisma"],
+    "/*": ["./prisma/**/*.db", "./prisma/schema.prisma"],
   },
 };
 

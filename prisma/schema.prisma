@@ -1,0 +1,197 @@
+// PayWhenDone — SQLite for local/dev.
+// For production, switch provider to "postgresql" and set DATABASE_URL to Neon/Supabase.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Better Auth ───────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  passkeys      Passkey[]
+  jobs          Job[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model Passkey {
+  id           String   @id @default(cuid())
+  name         String?
+  publicKey    String
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialID String   @unique
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime @default(now())
+  aaguid       String?
+
+  @@index([userId])
+}
+
+// ─── App domain ────────────────────────────────────────────
+
+model Job {
+  id                     String   @id @default(cuid())
+  title                  String
+  brief                  String
+  amount                 Float
+  currency               String   @default("USD")
+  category               String   @default("other")
+  priority               String   @default("normal")
+  tagsJson               String   @default("[]")
+  clientName             String
+  workerName             String
+  workerEmail            String
+  status                 String   @default("awaiting_payment")
+  dueAt                  DateTime?
+  paypalOrderId          String?
+  paypalAuthorizationId  String?
+  paypalCaptureId        String?
+  paypalInvoiceId        String?
+  paypalPayoutBatchId    String?
+  paypalRefundId         String?
+  paypalJson             String?
+  proofImageDataUrl      String?
+  proofNotes             String?
+  aiVerdictJson          String?
+  activityJson           String   @default("[]")
+  disputesJson           String   @default("[]")
+  milestonesJson         String   @default("[]")
+  workerRating           Int?
+  internalNotes          String   @default("")
+  autoPayoutOnRelease    Boolean  @default(true)
+  createInvoiceOnFund    Boolean  @default(false)
+  ownerId                String?
+  owner                  User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  ledger                 LedgerEntry[]
+  invoices               InvoiceRecord[]
+  payouts                PayoutRecord[]
+
+  @@index([status])
+  @@index([ownerId])
+  @@index([updatedAt])
+}
+
+model LedgerEntry {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobTitle  String
+  type      String
+  amount    Float
+  currency  String
+  paypalId  String?
+  status    String
+  mock      Boolean  @default(false)
+  metaJson  String?
+  createdAt DateTime @default(now())
+
+  @@index([jobId])
+  @@index([createdAt])
+}
+
+model InvoiceRecord {
+  id              String   @id @default(cuid())
+  jobId           String
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  paypalInvoiceId String
+  status          String
+  amount          Float
+  currency        String
+  recipientEmail  String
+  mock            Boolean  @default(false)
+  detailJson      String?
+  createdAt       DateTime @default(now())
+
+  @@index([jobId])
+}
+
+model PayoutRecord {
+  id         String   @id @default(cuid())
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  batchId    String
+  itemId     String?
+  status     String
+  amount     Float
+  currency   String
+  receiver   String
+  mock       Boolean  @default(false)
+  detailJson String?
+  createdAt  DateTime @default(now())
+
+  @@index([jobId])
+}
+
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  eventType  String
+  resourceId String?
+  jobId      String?
+  payloadJson String
+  processed  Boolean  @default(false)
+  receivedAt DateTime @default(now())
+
+  @@index([receivedAt])
+}

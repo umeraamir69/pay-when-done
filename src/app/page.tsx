@@ -1,69 +1,188 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { FadeIn, FadeItem, Stagger } from "@/components/Motion";
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <section className="hero">
+        <div className="hero-atmosphere" aria-hidden="true" />
+        <motion.div
+          className="hero-copy"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <p className="eyebrow">PayPal authorize · Muse AI verify · capture</p>
+          <h1>PayWhenDone</h1>
+          <p className="lede">
+            Local gigs hired on Facebook, Nextdoor, or WhatsApp have no
+            protection. Hold the PayPal payment until an AI agent confirms the
+            work matches the brief — then release it.
           </p>
+          <div className="cta-row">
+            <Link href="/signup" className="btn-primary">
+              Create account
+            </Link>
+            <Link href="/how-it-works" className="btn-ghost">
+              See how it works
+            </Link>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="hero-stage"
+          aria-hidden="true"
+          initial={{ opacity: 0, scale: 0.96, y: 24 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="hero-stage-label">Live money flow</div>
+          <div className="hero-pipeline">
+            <span>Hold</span>
+            <i />
+            <span>Prove</span>
+            <i />
+            <span>Verify</span>
+            <i />
+            <span className="accent">Pay</span>
+          </div>
+          <p className="hero-stage-copy">
+            Funds stay authorized — not captured — until Muse says the job is
+            done. Sign in with a passkey next time.
+          </p>
+        </motion.div>
+      </section>
+
+      <section className="section">
+        <FadeIn>
+          <p className="eyebrow">The problem</p>
+          <h2>Trust breaks the moment you leave the marketplace</h2>
+        </FadeIn>
+        <Stagger className="split-grid">
+          <FadeItem>
+            <article className="story-block">
+              <h3>Client risk</h3>
+              <p>
+                Pay a cleaner or handyman upfront from a chat thread. They ghost.
+                There is no dispute button, no hold, no recourse.
+              </p>
+            </article>
+          </FadeItem>
+          <FadeItem>
+            <article className="story-block">
+              <h3>Worker risk</h3>
+              <p>
+                Finish the bathroom, send photos, wait for Venmo that never
+                arrives. Your labor already left the building.
+              </p>
+            </article>
+          </FadeItem>
+        </Stagger>
+      </section>
+
+      <section className="section band">
+        <FadeIn>
+          <p className="eyebrow">Product</p>
+          <h2>Four steps. One escrow.</h2>
+        </FadeIn>
+        <FadeIn>
+          <ol className="steps-rail">
+            {[
+              ["01 · Brief", "Write what “done” means in plain language."],
+              ["02 · Hold", "Client authorizes PayPal — money held, not taken."],
+              ["03 · Proof", "Worker uploads photos and notes against the brief."],
+              [
+                "04 · Release",
+                "Muse AI verifies. Capture payment or void the hold.",
+              ],
+            ].map(([title, copy]) => (
+              <li key={title}>
+                <strong>{title}</strong>
+                <span>{copy}</span>
+              </li>
+            ))}
+          </ol>
+        </FadeIn>
+        <div className="cta-row" style={{ marginTop: "1.75rem" }}>
+          <Link href="/create" className="btn-primary">
+            Start a job
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="section">
+        <FadeIn>
+          <p className="eyebrow">Who it’s for</p>
+          <h2>Everyday off-platform work</h2>
+        </FadeIn>
+        <Stagger className="audience-grid">
+          {[
+            ["Home services", "Cleaners, painters, handymen, landscapers"],
+            ["Moving & labor", "Movers, furniture assembly, same-day help"],
+            ["Teaching", "Tutors, coaches, lesson packages"],
+            ["Creatives", "Photographers, editors, event helpers"],
+          ].map(([title, copy]) => (
+            <FadeItem key={title}>
+              <article>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </article>
+            </FadeItem>
+          ))}
+        </Stagger>
+      </section>
+
+      <section className="section band-dark">
+        <FadeIn>
+          <p className="eyebrow light">Stack</p>
+          <h2>Built on real rails</h2>
+        </FadeIn>
+        <Stagger className="stack-row">
+          {[
+            [
+              "PayPal sandbox",
+              "Orders, invoices, payouts, refunds, webhooks — authorize & capture escrow.",
+            ],
+            [
+              "Muse AI",
+              "Meta Muse Spark reads proof photos and notes, then gates the money action.",
+            ],
+            [
+              "Passkeys + Prisma",
+              "SQLite locally (Neon Postgres in prod). Sign in with Face ID every time.",
+            ],
+          ].map(([title, copy]) => (
+            <FadeItem key={title}>
+              <div>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </div>
+            </FadeItem>
+          ))}
+        </Stagger>
+      </section>
+
+      <section className="section cta-finale">
+        <FadeIn>
+          <p className="eyebrow">Ready</p>
+          <h2>Protect the next gig you hire — or finish.</h2>
+          <p className="lede narrow">
+            Create an account, add a passkey, hold funds, upload proof, let Muse
+            decide.
+          </p>
+          <div className="cta-row">
+            <Link href="/signup" className="btn-primary">
+              Get started
+            </Link>
+            <Link href="/login" className="btn-ghost">
+              Passkey sign in
+            </Link>
+          </div>
+        </FadeIn>
+      </section>
+    </>
   );
 }

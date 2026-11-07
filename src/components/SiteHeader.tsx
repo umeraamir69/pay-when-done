@@ -1,0 +1,70 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useSession, signOut } from "@/lib/auth-client";
+
+const links = [
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/templates", label: "Templates" },
+  { href: "/create", label: "New job" },
+  { href: "/jobs", label: "Jobs" },
+  { href: "/admin", label: "Admin" },
+  { href: "/docs", label: "Docs" },
+];
+
+export function SiteHeader() {
+  const pathname = usePathname();
+  const { data: session } = useSession();
+
+  return (
+    <header className="site-header">
+      <Link href="/" className="brand">
+        PayWhenDone
+      </Link>
+      <nav>
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={
+              pathname === link.href || pathname.startsWith(`${link.href}/`)
+                ? "active"
+                : undefined
+            }
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+      <div className="header-actions">
+        {session ? (
+          <>
+            <Link href="/notifications" className="header-settings">
+              Alerts
+            </Link>
+            <Link href="/account" className="header-settings">
+              {session.user.name || "Account"}
+            </Link>
+            <button
+              type="button"
+              className="btn-ghost header-cta"
+              onClick={() => signOut()}
+            >
+              Sign out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="header-settings">
+              Sign in
+            </Link>
+            <Link href="/signup" className="btn-primary header-cta">
+              Get started
+            </Link>
+          </>
+        )}
+      </div>
+    </header>
+  );
+}
