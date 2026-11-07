@@ -159,8 +159,18 @@ export function AccountProfile({
       {info ? <p className="banner">{info}</p> : null}
 
       <div className="account-avatar-row">
-        <div className="account-avatar" aria-hidden={preview ? undefined : true}>
-          {preview ? <img src={preview} alt="" /> : <span>{initials}</span>}
+        <div
+          className="account-avatar"
+          role={preview ? "img" : undefined}
+          aria-label={preview ? "Profile picture" : undefined}
+          aria-hidden={preview ? undefined : true}
+          style={
+            preview
+              ? { backgroundImage: `url(${preview})`, backgroundSize: "cover", backgroundPosition: "center" }
+              : undefined
+          }
+        >
+          {preview ? null : <span>{initials}</span>}
         </div>
         <div className="account-avatar-actions">
           <label className="btn-ghost account-file-label" htmlFor={fileInputId}>
