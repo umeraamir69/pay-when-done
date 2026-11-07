@@ -97,26 +97,92 @@ pre {
   white-space: nowrap;
 }
 
-.site-header nav {
+.site-nav-desktop {
   display: flex;
-  gap: 1.15rem;
+  align-items: center;
+  gap: 1.05rem;
   font-size: 0.92rem;
   margin-left: auto;
-  margin-right: 0.75rem;
+  margin-right: 0.85rem;
 }
 
-.site-header nav a {
-  opacity: 0.7;
+.site-nav-desktop a,
+.site-nav-mobile a {
+  opacity: 0.72;
+  font-weight: 500;
+  transition: opacity 0.15s ease, color 0.15s ease;
 }
 
-.site-header nav a:hover,
-.site-header nav a.active {
+.site-nav-desktop a:hover,
+.site-nav-desktop a.active,
+.site-nav-mobile a:hover,
+.site-nav-mobile a.active {
   opacity: 1;
+  color: var(--ink);
+}
+
+.header-nav-create {
+  font-weight: 650;
 }
 
 .header-cta {
   padding: 0.65rem 1rem !important;
   font-size: 0.88rem !important;
+}
+
+.header-menu-btn {
+  display: none;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.header-menu-icon {
+  width: 1.05rem;
+  height: 0.78rem;
+  display: block;
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / 100% 1.5px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 50% / 100% 1.5px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / 100% 1.5px no-repeat;
+}
+
+.header-drawer,
+.header-drawer-backdrop {
+  display: none;
+}
+
+.header-account {
+  display: inline-grid;
+  gap: 0.05rem;
+  line-height: 1.15;
+  text-align: right;
+  max-width: 10.5rem;
+}
+
+.header-account-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.header-account-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* —— Footer —— */
@@ -1037,8 +1103,78 @@ textarea {
     flex-direction: column;
   }
 
-  .site-header nav {
+  .site-nav-desktop,
+  .header-actions-desktop {
     display: none;
+  }
+
+  .header-menu-btn {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .header-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: rgba(12, 36, 32, 0.28);
+    z-index: 40;
+    cursor: pointer;
+  }
+
+  .header-drawer {
+    display: grid;
+    gap: 1.25rem;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(20.5rem, 88vw);
+    height: 100vh;
+    padding: 5rem 1.25rem 1.5rem;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(231, 238, 241, 0.98)),
+      #e7eef1;
+    border-left: 1px solid var(--line);
+    box-shadow: -18px 0 48px rgba(12, 36, 32, 0.14);
+    z-index: 50;
+    overflow-y: auto;
+  }
+
+  .header-drawer[hidden] {
+    display: none;
+  }
+
+  .site-nav-mobile {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .site-nav-mobile a {
+    display: block;
+    padding: 0.7rem 0.15rem;
+    font-size: 1.02rem;
+    border-bottom: 1px solid rgba(16, 35, 31, 0.08);
+  }
+
+  .header-actions-mobile {
+    display: grid;
+    gap: 0.75rem;
+    justify-items: stretch;
+    padding-top: 0.35rem;
+  }
+
+  .header-actions-mobile .header-account {
+    text-align: left;
+    max-width: none;
+  }
+
+  .header-actions-mobile .btn-primary,
+  .header-actions-mobile .btn-ghost {
+    width: 100%;
+    justify-content: center;
   }
 
   .job-aside {
@@ -1088,16 +1224,21 @@ select {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .header-settings {
   font-size: 0.9rem;
-  opacity: 0.7;
+  opacity: 0.72;
+  font-weight: 500;
 }
 
 .header-settings:hover {
   opacity: 1;
+}
+
+.header-actions-mobile {
+  display: none;
 }
 
 /* —— Admin console —— */

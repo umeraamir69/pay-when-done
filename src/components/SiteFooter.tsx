@@ -8,20 +8,21 @@ const productLinks = [
   { href: "/about", label: "About" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/templates", label: "Templates" },
-  { href: "/create", label: "New job" },
   { href: "/jobs", label: "Jobs" },
   { href: "/faq", label: "FAQ" },
 ];
 
-const docsLinks = [
-  { href: "/docs", label: "Overview" },
+const resourceLinks = [
+  { href: "/docs", label: "Docs" },
   { href: "/docs/features", label: "Features" },
   { href: "/docs/api", label: "API" },
+  { href: "/create", label: "New job" },
 ];
 
 const accountLinks = [
   { href: "/account", label: "Account" },
   { href: "/settings", label: "Settings" },
+  { href: "/notifications", label: "Alerts" },
   { href: "/login", label: "Sign in" },
 ];
 
@@ -40,11 +41,9 @@ export function SiteFooter() {
             <BrandMark size={32} />
           </Link>
           <p className="footer-tagline">
-            AI-verified PayPal escrow for off-platform local gigs.
+            Hold PayPal payment in escrow until the work is AI-verified done.
           </p>
-          <p className="footer-stack">
-            PayPal · Muse AI · Better Auth · Prisma
-          </p>
+          <p className="footer-stack">PayPal · Muse AI · Better Auth</p>
         </div>
 
         <nav className="footer-col" aria-label="Product">
@@ -58,10 +57,10 @@ export function SiteFooter() {
           </ul>
         </nav>
 
-        <nav className="footer-col" aria-label="Docs">
-          <h2 className="footer-heading">Docs</h2>
+        <nav className="footer-col" aria-label="Resources">
+          <h2 className="footer-heading">Resources</h2>
           <ul className="footer-links">
-            {docsLinks.map((link) => (
+            {resourceLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href}>{link.label}</Link>
               </li>
@@ -84,7 +83,7 @@ export function SiteFooter() {
       <div className="footer-bottom">
         <p className="footer-legal">PayPal AI Hackathon · MIT License</p>
         <p className="footer-legal muted">
-          Hold payment until the work is verified done.
+          Built for off-platform local gigs — pay when the work is done.
         </p>
       </div>
     </footer>
