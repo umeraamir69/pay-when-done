@@ -35,7 +35,8 @@ export default function HowItWorksPage() {
       <h1>How PayWhenDone works</h1>
       <p className="lede narrow">
         Escrow without a marketplace. PayPal holds the money. Muse decides when
-        the brief is satisfied.
+        the brief is satisfied. Product overview and builder notes live on{" "}
+        <Link href="/about">About</Link>.
       </p>
 
       <div className="timeline">
@@ -47,20 +48,25 @@ export default function HowItWorksPage() {
         ))}
       </div>
 
-      <section className="panel" style={{ marginTop: "2rem" }}>
+      <section className="panel demo-panel">
+        <p className="eyebrow">Try it</p>
         <h2>Demo path for judges</h2>
+        <p className="muted demo-panel-lede">
+          Walk the full escrow loop in sandbox — brief, hold, proof, verify,
+          release.
+        </p>
         <ol className="plain-list">
           <li>Create a bathroom-clean job with concrete criteria</li>
           <li>Hold funds (sandbox PayPal or mock)</li>
           <li>Upload a real after-photo + matching notes</li>
           <li>Run Muse verify → release payment</li>
         </ol>
-        <div className="cta-row" style={{ marginTop: "1rem" }}>
+        <div className="cta-row section-cta">
           <Link href="/create" className="btn-primary">
             Try it now
           </Link>
-          <Link href="/faq" className="btn-ghost">
-            FAQ
+          <Link href="/about" className="btn-ghost">
+            About the product
           </Link>
         </div>
       </section>

@@ -623,6 +623,60 @@ textarea {
   color: var(--muted);
 }
 
+.demo-panel {
+  margin-top: 2rem;
+}
+
+.demo-panel-lede {
+  margin: 0 0 0.35rem;
+  max-width: 36rem;
+}
+
+.section-cta {
+  margin-top: 1rem;
+}
+
+.about-section {
+  margin-top: 2.5rem;
+}
+
+.about-section h2 {
+  margin: 0.35rem 0 0.85rem;
+  font-size: clamp(1.55rem, 2.8vw, 2.05rem);
+  line-height: 1.15;
+}
+
+.about-section-lede {
+  margin: -0.25rem 0 1rem;
+  max-width: 36rem;
+}
+
+.about-split {
+  margin-top: 0.5rem;
+}
+
+.about-split .panel h3 {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.about-split .panel p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.about-api-list {
+  margin-top: 0;
+}
+
+.about-builder {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+
 .faq-list {
   display: grid;
   gap: 0.75rem;
