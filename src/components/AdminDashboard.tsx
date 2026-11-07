@@ -282,16 +282,16 @@ export function AdminDashboard() {
   }, [stats]);
 
   return (
-    <div className="admin-shell">
-      <div className="page-heading-row">
+    <div className="admin-page">
+      <header className="admin-page-header" id="overview">
         <div>
-          <p className="eyebrow">Operations</p>
-          <h1>Admin dashboard</h1>
+          <p className="eyebrow">Operations console</p>
+          <h1>Dashboard</h1>
           <p className="muted">
             Escrow volume, Muse decisions, disputes, and live job controls.
           </p>
         </div>
-        <div className="cta-row" style={{ marginTop: 0 }}>
+        <div className="admin-page-actions">
           <a href="/api/jobs/export" className="btn-ghost">
             Export CSV
           </a>
@@ -307,60 +307,68 @@ export function AdminDashboard() {
             New job
           </Link>
         </div>
-      </div>
+      </header>
 
       {message ? <p className="banner">{message}</p> : null}
 
       {stats ? (
-        <div className="stat-grid">
-          <article className="stat-card">
-            <span>Total jobs</span>
-            <strong>{stats.totalJobs}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Active escrows</span>
-            <strong>{stats.activeEscrows}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Funds held</span>
-            <strong>{formatMoney(stats.fundsHeld)}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Released</span>
-            <strong>{formatMoney(stats.fundsReleased)}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Refunded</span>
-            <strong>{formatMoney(stats.fundsRefunded)}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Muse approved</span>
-            <strong>{stats.aiApproved}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Invoices</span>
-            <strong>{stats.invoicesSent}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Payouts</span>
-            <strong>{stats.payoutsSent}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Disputes</span>
-            <strong>{stats.disputed}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Avg Muse confidence</span>
-            <strong>{pct(stats.avgConfidence)}</strong>
-          </article>
-        </div>
+        <>
+          <section className="admin-metric-row" aria-label="Primary metrics">
+            <article className="stat-card">
+              <span>Active escrows</span>
+              <strong>{stats.activeEscrows}</strong>
+            </article>
+            <article className="stat-card">
+              <span>Funds held</span>
+              <strong>{formatMoney(stats.fundsHeld)}</strong>
+            </article>
+            <article className="stat-card">
+              <span>Disputes</span>
+              <strong>{stats.disputed}</strong>
+            </article>
+            <article className="stat-card">
+              <span>Muse approved</span>
+              <strong>{stats.aiApproved}</strong>
+            </article>
+          </section>
+
+          <section
+            className="admin-metric-secondary"
+            aria-label="Secondary metrics"
+          >
+            <div>
+              <span>Total jobs</span>
+              <strong>{stats.totalJobs}</strong>
+            </div>
+            <div>
+              <span>Released</span>
+              <strong>{formatMoney(stats.fundsReleased)}</strong>
+            </div>
+            <div>
+              <span>Refunded</span>
+              <strong>{formatMoney(stats.fundsRefunded)}</strong>
+            </div>
+            <div>
+              <span>Invoices</span>
+              <strong>{stats.invoicesSent}</strong>
+            </div>
+            <div>
+              <span>Payouts</span>
+              <strong>{stats.payoutsSent}</strong>
+            </div>
+            <div>
+              <span>Avg Muse confidence</span>
+              <strong>{pct(stats.avgConfidence)}</strong>
+            </div>
+          </section>
+        </>
       ) : (
         <p className="muted panel-loading">
           <BusySpinner label="Loading metrics…" />
         </p>
       )}
 
-      <div className="admin-columns">
+      <div className="admin-columns" id="pipeline">
         <section className="panel">
           <h2>Pipeline by status</h2>
           <div className="bar-list">
@@ -399,7 +407,7 @@ export function AdminDashboard() {
         </section>
       </div>
 
-      <section className="panel">
+      <section className="panel" id="ledger">
         <div className="table-toolbar">
           <div>
             <h2>PayPal ledger</h2>
@@ -483,7 +491,7 @@ export function AdminDashboard() {
         </div>
       </section>
 
-      <section className="panel admin-table-panel">
+      <section className="panel admin-table-panel" id="jobs">
         <div className="table-toolbar">
           <h2>All jobs</h2>
           <div className="toolbar-controls">

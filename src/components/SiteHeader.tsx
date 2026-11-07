@@ -11,13 +11,17 @@ const links = [
   { href: "/templates", label: "Templates" },
   { href: "/create", label: "New job" },
   { href: "/jobs", label: "Jobs" },
-  { href: "/admin", label: "Admin" },
   { href: "/docs", label: "Docs" },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  // Admin console uses its own chrome (sidebar layout).
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <header className="site-header">
@@ -47,6 +51,9 @@ export function SiteHeader() {
             </Link>
             <Link href="/account" className="header-settings">
               {session.user.name || "Account"}
+            </Link>
+            <Link href="/admin" className="header-settings">
+              Admin
             </Link>
             <button
               type="button"
