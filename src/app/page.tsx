@@ -51,7 +51,7 @@ export default function HomePage() {
           </div>
           <p className="hero-stage-copy">
             Funds stay authorized — not captured — until Muse says the job is
-            done. Sign in with a passkey next time.
+            done. Sign in with email, then add a passkey from Account.
           </p>
         </motion.div>
       </section>
@@ -170,8 +170,8 @@ export default function HomePage() {
           <p className="eyebrow">Ready</p>
           <h2>Protect the next gig you hire — or finish.</h2>
           <p className="lede narrow">
-            Create an account, add a passkey, hold funds, upload proof, let Muse
-            decide.
+            Create an account with email, optionally add a passkey on Account, then
+            hold funds, upload proof, and let Muse decide.
           </p>
           <div className="cta-row">
             <Link href="/signup" className="btn-primary">

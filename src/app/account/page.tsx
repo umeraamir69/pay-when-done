@@ -9,7 +9,7 @@ export default function AccountPage() {
       <p className="eyebrow">Security</p>
       <h1>Your account</h1>
       <p className="lede narrow" style={{ marginBottom: "1.5rem" }}>
-        Manage passkeys for passwordless sign-in on every visit.
+        Add a passkey here after login. Next visit, use it on the login page.
       </p>
       <AccountPasskeys />
     </div>
