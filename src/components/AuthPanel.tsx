@@ -3,9 +3,25 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { motion } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
 
 type Mode = "login" | "signup";
+
+const highlights = [
+  {
+    title: "Hold with PayPal",
+    body: "Authorize funds up front — nothing is captured until the job checks out.",
+  },
+  {
+    title: "Prove the work",
+    body: "Workers upload photos and notes against the written brief.",
+  },
+  {
+    title: "Muse decides",
+    body: "AI verifies proof, then you release, void, refund, or pay out.",
+  },
+];
 
 function passkeyErrorMessage(err: unknown) {
   const raw =
@@ -35,22 +51,15 @@ export function AuthPanel({ mode }: { mode: Mode }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    setBusy("form");
     setError(null);
     setInfo(null);
-
-    if (mode === "signup" && password !== confirmPassword) {
-      setError("Passwords do not match. Please confirm your password.");
-      return;
-    }
-
-    setBusy("form");
     try {
       if (mode === "signup") {
         const { error: err } = await authClient.signUp.email({
@@ -59,7 +68,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
           name: name || email.split("@")[0],
         });
         if (err) throw new Error(err.message || "Sign up failed");
-        setInfo("Account created. Optional: add a passkey from Account.");
+        setInfo("Account created. Optional: add a passkey on the next screen.");
         router.push("/account");
         router.refresh();
         return;
@@ -111,14 +120,68 @@ export function AuthPanel({ mode }: { mode: Mode }) {
 
   return (
     <div className="auth-shell">
-      <div className="auth-card panel reveal">
+      <div className="auth-atmosphere" aria-hidden="true" />
+
+      <motion.aside
+        className="auth-showcase"
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <p className="eyebrow light">PayWhenDone</p>
+        <h2 className="auth-showcase-title">
+          {mode === "login"
+            ? "Back to protected gigs."
+            : "Escrow that actually checks the work."}
+        </h2>
+        <p className="auth-showcase-lede">
+          Hold PayPal payment for cleaners, tutors, movers, and handymen hired
+          off-platform — Muse AI confirms the proof before money moves.
+        </p>
+
+        <div className="auth-pipeline" aria-hidden="true">
+          <span>Hold</span>
+          <i />
+          <span>Prove</span>
+          <i />
+          <span>Verify</span>
+          <i />
+          <span className="accent">Pay</span>
+        </div>
+
+        <ul className="auth-highlights">
+          {highlights.map((item, index) => (
+            <motion.li
+              key={item.title}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 + index * 0.08, duration: 0.4 }}
+            >
+              <strong>{item.title}</strong>
+              <span>{item.body}</span>
+            </motion.li>
+          ))}
+        </ul>
+
+        <div className="auth-showcase-footer">
+          <Link href="/how-it-works">How it works</Link>
+          <Link href="/templates">Browse templates</Link>
+        </div>
+      </motion.aside>
+
+      <motion.div
+        className="auth-card panel"
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+      >
         <p className="eyebrow">
           {mode === "login" ? "Welcome back" : "Create account"}
         </p>
-        <h1>{mode === "login" ? "Sign in" : "Sign up"}</h1>
-        <p className="muted">
+        <h1>{mode === "login" ? "Sign in" : "Join PayWhenDone"}</h1>
+        <p className="muted auth-card-lede">
           {mode === "login"
-            ? "Sign in with email and password. Passkey is only for return visits after you add one on Account."
+            ? "Use email and password. Passkeys are optional after you register one on Account."
             : "Create an account with email. Add Face ID / Touch ID later from Account if you want."}
         </p>
 
@@ -160,27 +223,13 @@ export function AuthPanel({ mode }: { mode: Mode }) {
               disabled={busy !== null}
             />
           </label>
-          {mode === "signup" ? (
-            <label>
-              Confirm password
-              <input
-                type="password"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                minLength={8}
-                required
-                disabled={busy !== null}
-              />
-            </label>
-          ) : null}
 
           {error ? <p className="error">{error}</p> : null}
           {info ? <p className="banner">{info}</p> : null}
 
           <button
             type="submit"
-            className="btn-primary"
+            className="btn-primary auth-submit"
             disabled={busy !== null}
           >
             {busy === "form"
@@ -194,7 +243,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
         {mode === "login" ? (
           <>
             <div className="auth-divider">
-              <span>or return with passkey</span>
+              <span>or passkey</span>
             </div>
             <button
               type="button"
@@ -208,13 +257,13 @@ export function AuthPanel({ mode }: { mode: Mode }) {
             </button>
             <p className="muted auth-passkey-hint">
               Only after you add a passkey on{" "}
-              <Link href="/account">Account</Link>. New here? Use email first.
+              <Link href="/account">Account</Link>. If the prompt hangs, cancel
+              and use email.
             </p>
           </>
         ) : (
           <p className="muted auth-passkey-hint">
-            After signup, open Account to register a passkey for one-tap return
-            visits. Passkeys are not created during signup.
+            After signup you can register a passkey for one-tap return visits.
           </p>
         )}
 
@@ -229,7 +278,7 @@ export function AuthPanel({ mode }: { mode: Mode }) {
             </>
           )}
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -35,8 +35,7 @@ export default function HowItWorksPage() {
       <h1>How PayWhenDone works</h1>
       <p className="lede narrow">
         Escrow without a marketplace. PayPal holds the money. Muse decides when
-        the brief is satisfied. Product overview and builder notes live on{" "}
-        <Link href="/about">About</Link>.
+        the brief is satisfied.
       </p>
 
       <div className="timeline">
@@ -65,8 +64,8 @@ export default function HowItWorksPage() {
           <Link href="/create" className="btn-primary">
             Try it now
           </Link>
-          <Link href="/about" className="btn-ghost">
-            About the product
+          <Link href="/faq" className="btn-ghost">
+            FAQ
           </Link>
         </div>
       </section>
