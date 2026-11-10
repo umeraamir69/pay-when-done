@@ -35,6 +35,7 @@ const consoleNav: NavItem[] = [
 const workspaceNav: NavItem[] = [
   { href: "/jobs", label: "Jobs board", icon: "jobs", match: "prefix" },
   { href: "/create", label: "New job", icon: "create", match: "exact" },
+  { href: "/pitch", label: "Pitch", icon: "features", match: "exact" },
   { href: "/settings", label: "Settings", icon: "settings", match: "prefix" },
   {
     href: "/notifications",

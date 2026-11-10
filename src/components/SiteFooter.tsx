@@ -60,7 +60,7 @@ function FooterLinkList({
 export function SiteFooter() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/pitch")) {
     return null;
   }
 

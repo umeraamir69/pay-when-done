@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { Suspense, useEffect, useId, useState } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { BrandMark } from "@/components/BrandMark";
 import { NavIcon, type NavIconName } from "@/components/NavIcons";
+import { PitchModeEntry } from "@/components/PitchModeEntry";
+import { readPitchModePreference } from "@/lib/pitch";
 
 type NavLink = {
   href: string;
@@ -21,23 +23,41 @@ const marketingLinks: NavLink[] = [
   { href: "/docs", label: "Docs", icon: "docs" },
 ];
 
+const ADMIN_HINT_EMAILS = new Set(
+  (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "umer@umer.com")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
+);
+
 function linkActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function isPitchAdmin(email: string | null | undefined) {
+  if (!email) return false;
+  return ADMIN_HINT_EMAILS.has(email.toLowerCase());
 }
 
 export function SiteHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
+  const [pitchPref, setPitchPref] = useState(false);
   const menuId = useId();
   const isAdminRoute = pathname.startsWith("/admin");
+  const isPitchRoute = pathname.startsWith("/pitch");
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    if (!open || isAdminRoute) return;
+    setPitchPref(readPitchModePreference());
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open || isAdminRoute || isPitchRoute) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
@@ -48,12 +68,18 @@ export function SiteHeader() {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, isAdminRoute]);
+  }, [open, isAdminRoute, isPitchRoute]);
 
-  // Admin console uses its own chrome (sidebar layout).
-  if (isAdminRoute) {
-    return null;
+  // Admin console and pitch deck use their own chrome.
+  if (isAdminRoute || isPitchRoute) {
+    return (
+      <Suspense fallback={null}>
+        <PitchModeEntry />
+      </Suspense>
+    );
   }
+
+  const showPitchLink = pitchPref || isPitchAdmin(session?.user?.email);
 
   const navLinks = (
     <>
@@ -89,8 +115,26 @@ export function SiteHeader() {
     </>
   );
 
+  const pitchLink = showPitchLink ? (
+    <Link
+      href="/pitch"
+      className={
+        linkActive(pathname, "/pitch")
+          ? "nav-link active header-pitch"
+          : "nav-link header-pitch"
+      }
+      aria-current={linkActive(pathname, "/pitch") ? "page" : undefined}
+      onClick={() => setOpen(false)}
+      title="Open pitch mode"
+    >
+      <NavIcon name="features" size={15} />
+      <span>Pitch</span>
+    </Link>
+  ) : null;
+
   const actions = session ? (
     <>
+      {pitchLink}
       <Link
         href="/notifications"
         className="header-settings nav-link"
@@ -126,6 +170,7 @@ export function SiteHeader() {
     </>
   ) : (
     <>
+      {pitchLink}
       <Link
         href="/login"
         className="header-settings nav-link"
@@ -146,6 +191,9 @@ export function SiteHeader() {
 
   return (
     <header className={`site-header${open ? " is-nav-open" : ""}`}>
+      <Suspense fallback={null}>
+        <PitchModeEntry />
+      </Suspense>
       <Link href="/" className="brand-link" aria-label="PayWhenDone home">
         <BrandMark />
       </Link>
