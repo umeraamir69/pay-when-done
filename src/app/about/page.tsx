@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -36,13 +37,70 @@ const paypalApis = [
 export default function AboutPage() {
   return (
     <div className="page-shell wide">
-      <p className="eyebrow">About</p>
-      <h1>PayWhenDone</h1>
-      <p className="lede narrow">
-        AI-verified PayPal escrow for local gigs hired off-platform — Facebook,
-        Nextdoor, WhatsApp, word of mouth. Not a marketplace. Just hold → prove
-        → verify → pay.
-      </p>
+      <section className="about-founder reveal">
+        <div className="about-founder-grid">
+          <div className="about-founder-photo-wrap">
+            <Image
+              src="/images/umer-aamir.jpg"
+              alt="Muhammad Umer Aamir"
+              width={640}
+              height={640}
+              className="about-founder-photo"
+              priority
+            />
+          </div>
+          <div className="about-founder-copy">
+            <p className="eyebrow">Founder</p>
+            <h1>Muhammad Umer Aamir</h1>
+            <p className="about-founder-role">
+              Founder &amp; builder of PayWhenDone
+            </p>
+            <p className="muted about-founder-bio">
+              MAC student at Wilfrid Laurier in the Brantford / Waterloo area. I
+              ship full-stack work in TypeScript and Next.js — from security
+              tools like SecSentry to ApplySafe for Canadian job-scam checks.
+              PayWhenDone is my PayPal AI Hackathon entry: sandbox escrow rails,
+              Muse verification, and passkeys in one working demo.
+            </p>
+            <div className="cta-row section-cta">
+              <a
+                href="https://github.com/umeraamir69/pay-when-done"
+                className="btn-primary"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub repo
+              </a>
+              <a
+                href="https://github.com/umeraamir69"
+                className="btn-ghost"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Profile
+              </a>
+              <a
+                href="https://www.linkedin.com/in/umeraamir69/"
+                className="btn-ghost"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                LinkedIn
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="about-section about-product-intro">
+        <p className="eyebrow">Product</p>
+        <h2>PayWhenDone</h2>
+        <p className="lede narrow">
+          AI-verified PayPal escrow for local gigs hired off-platform — Facebook,
+          Nextdoor, WhatsApp, word of mouth. Not a marketplace. Just hold → prove
+          → verify → pay.
+        </p>
+      </section>
 
       <section className="about-section">
         <p className="eyebrow">The problem</p>
@@ -66,7 +124,7 @@ export default function AboutPage() {
       </section>
 
       <section className="about-section">
-        <p className="eyebrow">Product</p>
+        <p className="eyebrow">How it works</p>
         <h2>Four steps. One escrow.</h2>
         <p className="muted about-section-lede">
           Same application story as the walkthrough — condensed for judges and
@@ -138,44 +196,6 @@ export default function AboutPage() {
           <Link href="/how-it-works" className="btn-ghost">
             Full walkthrough
           </Link>
-        </div>
-      </section>
-
-      <section className="about-section about-builder">
-        <p className="eyebrow">Built by</p>
-        <h2>Muhammad Umer Aamir</h2>
-        <p className="muted about-section-lede">
-          MAC student at Wilfrid Laurier in the Brantford / Waterloo area. I
-          ship full-stack work in TypeScript and Next.js — from security tools
-          like SecSentry to ApplySafe for Canadian job-scam checks. PayWhenDone
-          is my PayPal AI Hackathon entry: sandbox escrow rails, Muse
-          verification, and passkeys in one working demo.
-        </p>
-        <div className="cta-row section-cta">
-          <a
-            href="https://github.com/umeraamir69/pay-when-done"
-            className="btn-primary"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub repo
-          </a>
-          <a
-            href="https://github.com/umeraamir69"
-            className="btn-ghost"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Profile
-          </a>
-          <a
-            href="https://www.linkedin.com/in/umeraamir69/"
-            className="btn-ghost"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            LinkedIn
-          </a>
         </div>
       </section>
     </div>

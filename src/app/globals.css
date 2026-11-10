@@ -991,6 +991,78 @@ textarea {
   border-top: 1px solid var(--line);
 }
 
+.about-founder {
+  margin: 0 0 0.25rem;
+}
+
+.about-founder-grid {
+  display: grid;
+  grid-template-columns: minmax(9.5rem, 11.5rem) minmax(0, 1fr);
+  gap: 1.5rem 1.85rem;
+  align-items: start;
+}
+
+.about-founder-photo-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: calc(var(--radius) + 0.15rem);
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(160deg, rgba(15, 118, 110, 0.12), transparent 55%),
+    #d7e2df;
+  box-shadow: 0 14px 36px rgba(12, 36, 32, 0.12);
+}
+
+.about-founder-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+.about-founder-copy h1 {
+  margin: 0.2rem 0 0.35rem;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.05;
+}
+
+.about-founder-role {
+  margin: 0 0 0.85rem;
+  color: var(--accent);
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.about-founder-bio {
+  margin: 0;
+  max-width: 38rem;
+  line-height: 1.6;
+}
+
+.about-product-intro {
+  margin-top: 2.75rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.about-product-intro .lede {
+  margin-bottom: 0;
+}
+
+@media (max-width: 720px) {
+  .about-founder-grid {
+    grid-template-columns: 1fr;
+    gap: 1.15rem;
+  }
+
+  .about-founder-photo-wrap {
+    width: min(11.5rem, 46vw);
+  }
+}
+
 .faq-list {
   display: grid;
   gap: 0.75rem;
