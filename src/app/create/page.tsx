@@ -11,8 +11,8 @@ export default function CreatePage() {
       <p className="eyebrow">New escrow</p>
       <h1>Describe the job. Hold the money.</h1>
       <p className="lede narrow create-shell-lede">
-        Five short steps: template, details, people, PayPal options, then
-        review. Funds stay held until Muse verifies the work.
+        Template → details → people → PayPal → review. Muse checks the work
+        before funds release.
       </p>
       <CreateJobForm />
     </div>

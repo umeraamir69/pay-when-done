@@ -96,7 +96,9 @@ function CreateJobFormWizard({
   const reduce = useReducedMotion();
   const initial = getTemplateById(templateParam) || JOB_TEMPLATES[0];
 
-  const [stepIndex, setStepIndex] = useState(0);
+  const [stepIndex, setStepIndex] = useState(() =>
+    getTemplateById(templateParam) ? 1 : 0,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
@@ -380,6 +382,20 @@ function CreateJobFormWizard({
               <span className="muted">Write your own title and brief</span>
             </button>
 
+            {activeTemplate ? (
+              <p className="create-template-selected muted">
+                Selected:{" "}
+                <strong>
+                  {getTemplateById(activeTemplate)?.label || activeTemplate}
+                </strong>
+                <span> · Continue when ready, or pick another.</span>
+              </p>
+            ) : (
+              <p className="create-template-selected muted">
+                Blank job selected. Continue to write the brief yourself.
+              </p>
+            )}
+
             <div className="create-template-grid" role="listbox" aria-label="Templates">
               {filteredTemplates.length === 0 ? (
                 <p className="muted create-template-empty">
@@ -396,6 +412,12 @@ function CreateJobFormWizard({
                       aria-selected={selected}
                       className={`create-template-option ${selected ? "active" : ""}`}
                       onClick={() => applyTemplate(t.id)}
+                      onDoubleClick={() => {
+                        applyTemplate(t.id);
+                        setFieldError(null);
+                        setError(null);
+                        setStepIndex(1);
+                      }}
                     >
                       <span className="create-template-option-top">
                         <span className="eyebrow">{categoryLabel(t.category)}</span>
@@ -404,6 +426,9 @@ function CreateJobFormWizard({
                       <span className="create-template-option-title">{t.label}</span>
                       <span className="muted create-template-option-brief">
                         {t.title}
+                      </span>
+                      <span className="muted create-template-option-audience">
+                        {t.audience}
                       </span>
                     </button>
                   );
@@ -564,6 +589,20 @@ function CreateJobFormWizard({
 
         {step.id === "review" ? (
           <div className="create-review">
+            <div className="create-review-edits" aria-label="Jump back to edit">
+              <button type="button" className="btn-ghost" onClick={() => goToStep(0)}>
+                Edit template
+              </button>
+              <button type="button" className="btn-ghost" onClick={() => goToStep(1)}>
+                Edit details
+              </button>
+              <button type="button" className="btn-ghost" onClick={() => goToStep(2)}>
+                Edit people
+              </button>
+              <button type="button" className="btn-ghost" onClick={() => goToStep(3)}>
+                Edit payment
+              </button>
+            </div>
             <dl className="create-review-grid">
               <div>
                 <dt>Template</dt>
