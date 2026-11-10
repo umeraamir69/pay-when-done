@@ -127,14 +127,16 @@ export function JobsList({ initialJobs }: { initialJobs: Job[] }) {
 
   return (
     <div className="jobs-list-shell">
-      <div className="table-toolbar jobs-toolbar">
-        <div className="toolbar-controls">
+      <div className="jobs-toolbar" role="search">
+        <div className="jobs-toolbar-search">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search jobs…"
             aria-label="Search jobs"
           />
+        </div>
+        <div className="jobs-toolbar-filters">
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as JobStatus | "all")}
@@ -159,25 +161,28 @@ export function JobsList({ initialJobs }: { initialJobs: Job[] }) {
               </option>
             ))}
           </select>
-          <select
-            value={sortKey}
-            onChange={(e) => onSortChange(e.target.value)}
-            aria-label="Sort by"
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.key} value={opt.key}>
-                Sort: {opt.label}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="btn-ghost pagination-btn"
-            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-            aria-label={`Sort ${sortDir === "asc" ? "descending" : "ascending"}`}
-          >
-            {sortDir === "asc" ? "Asc ↑" : "Desc ↓"}
-          </button>
+          <div className="jobs-sort-group">
+            <select
+              value={sortKey}
+              onChange={(e) => onSortChange(e.target.value)}
+              aria-label="Sort by"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.key} value={opt.key}>
+                  Sort: {opt.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="jobs-sort-dir"
+              onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+              aria-label={`Sort ${sortDir === "asc" ? "descending" : "ascending"}`}
+              title={sortDir === "asc" ? "Ascending" : "Descending"}
+            >
+              {sortDir === "asc" ? "↑" : "↓"}
+            </button>
+          </div>
         </div>
       </div>
 

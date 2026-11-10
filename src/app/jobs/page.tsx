@@ -13,16 +13,16 @@ export default async function JobsPage() {
   const jobs = await listJobs();
 
   return (
-    <div className="page-shell wide">
-      <div className="page-heading-row">
+    <div className="page-shell wide jobs-page">
+      <div className="page-heading-row jobs-page-heading">
         <div>
           <p className="eyebrow">Workspace</p>
           <h1>Jobs</h1>
-          <p className="muted">
+          <p className="muted jobs-page-lede">
             Every escrow from hold to release — including disputes.
           </p>
         </div>
-        <div className="cta-row" style={{ marginTop: 0 }}>
+        <div className="cta-row jobs-page-actions">
           <Link href="/admin" className="btn-ghost">
             Admin
           </Link>
