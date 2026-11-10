@@ -38,9 +38,8 @@ Business sandbox for this project is configured on the merchant app (**Hackathon
 
 | Layer | Choice |
 |---|---|
-| **DB (local)** | Prisma + Neon Postgres |
-| **DB (prod)** | Neon Postgres (Vercel Marketplace) |
-| **Auth** | Better Auth + **Passkeys** |
+| **DB** | Prisma + Neon Postgres (Vercel Marketplace) |
+| **Auth** | Better Auth (email+password; optional passkeys on Account) |
 | **Payments** | PayPal sandbox REST APIs |
 | **AI** | Meta Muse (`muse-spark-1.3`) |
 | **UI** | Next.js App Router + Framer Motion |
