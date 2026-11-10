@@ -284,11 +284,10 @@ export function JobWorkspace({ initialJob }: Props) {
         <p className="eyebrow light">Escrow job</p>
         <h1>{job.title}</h1>
         <p className="amount">{formatMoney(job.amount, job.currency)}</p>
-        <p className={`status-pill status-${job.status}`}>
-          {statusLabel(job.status)}
-        </p>
-
-        <div className="aside-meta-chips">
+        <div className="aside-chip-row">
+          <p className={`status-pill status-${job.status}`}>
+            {statusLabel(job.status)}
+          </p>
           <span>{categoryLabel(job.category)}</span>
           <span>{priorityLabel(job.priority)}</span>
         </div>

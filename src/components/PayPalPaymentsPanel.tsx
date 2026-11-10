@@ -92,7 +92,9 @@ export function PayPalPaymentsPanel({ job, onUpdate }: Props) {
       </div>
 
       {snap.syncedAt ? (
-        <p className="muted">Last sync {formatDate(snap.syncedAt)}</p>
+        <p className="muted paypal-sync">
+          Last sync {formatDate(snap.syncedAt)}
+        </p>
       ) : null}
 
       <div className="paypal-actions">
