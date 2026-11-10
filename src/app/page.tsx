@@ -1,19 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { FadeIn, FadeItem, Stagger } from "@/components/Motion";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  BackgroundAtmosphere,
+  HeroStagePattern,
+} from "@/components/BackgroundAtmosphere";
+import { FadeIn, FadeItem, HeroPipeline, Stagger } from "@/components/Motion";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function HomePage() {
+  const reduce = useReducedMotion();
+
   return (
-    <>
+    <div className="landing">
+      <BackgroundAtmosphere variant="landing" />
+
       <section className="hero">
-        <div className="hero-atmosphere" aria-hidden="true" />
         <motion.div
           className="hero-copy"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 20 }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          transition={{ duration: reduce ? 0.2 : 0.6, ease }}
         >
           <p className="eyebrow">PayPal authorize · Muse AI verify · capture</p>
           <h1>PayWhenDone</h1>
@@ -35,20 +44,19 @@ export default function HomePage() {
         <motion.div
           className="hero-stage"
           aria-hidden="true"
-          initial={{ opacity: 0, scale: 0.96, y: 24 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          initial={
+            reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 24 }
+          }
+          animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+          transition={{
+            duration: reduce ? 0.2 : 0.7,
+            delay: reduce ? 0 : 0.12,
+            ease,
+          }}
         >
+          <HeroStagePattern />
           <div className="hero-stage-label">Live money flow</div>
-          <div className="hero-pipeline">
-            <span>Hold</span>
-            <i />
-            <span>Prove</span>
-            <i />
-            <span>Verify</span>
-            <i />
-            <span className="accent">Pay</span>
-          </div>
+          <HeroPipeline />
           <p className="hero-stage-copy">
             Funds stay authorized — not captured — until Muse says the job is
             done. Sign in with email, then add a passkey from Account.
@@ -88,7 +96,7 @@ export default function HomePage() {
           <p className="eyebrow">Product</p>
           <h2>Four steps. One escrow.</h2>
         </FadeIn>
-        <FadeIn>
+        <FadeIn delay={0.06}>
           <ol className="steps-rail">
             {[
               ["01 · Brief", "Write what “done” means in plain language."],
@@ -106,11 +114,13 @@ export default function HomePage() {
             ))}
           </ol>
         </FadeIn>
-        <div className="cta-row" style={{ marginTop: "1.75rem" }}>
-          <Link href="/create" className="btn-primary">
-            Start a job
-          </Link>
-        </div>
+        <FadeIn delay={0.12}>
+          <div className="cta-row" style={{ marginTop: "1.75rem" }}>
+            <Link href="/create" className="btn-primary">
+              Start a job
+            </Link>
+          </div>
+        </FadeIn>
       </section>
 
       <section className="section">
@@ -183,6 +193,6 @@ export default function HomePage() {
           </div>
         </FadeIn>
       </section>
-    </>
+    </div>
   );
 }
