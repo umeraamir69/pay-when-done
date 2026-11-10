@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense, useEffect, useId, useState } from "react";
+import {
+  Suspense,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { initialsFromName } from "@/lib/avatar";
 import { BrandMark } from "@/components/BrandMark";
@@ -69,6 +76,159 @@ function HeaderAvatar({
     >
       {image ? null : <span className="header-avatar-initials">{initials}</span>}
     </span>
+  );
+}
+
+function AccountMenu({
+  displayName,
+  image,
+  name,
+  email,
+  isAdmin,
+  showPitchLink,
+  pathname,
+  onNavigate,
+}: {
+  displayName: string;
+  image?: string | null;
+  name?: string | null;
+  email?: string | null;
+  isAdmin: boolean;
+  showPitchLink: boolean;
+  pathname: string;
+  onNavigate: () => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+  const accountActive = linkActive(pathname, "/account");
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (!target || !rootRef.current?.contains(target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  const closeAndNavigate = () => {
+    setMenuOpen(false);
+    onNavigate();
+  };
+
+  return (
+    <div
+      className={`header-account-menu${menuOpen ? " is-open" : ""}`}
+      ref={rootRef}
+    >
+      <button
+        type="button"
+        className={
+          menuOpen || accountActive
+            ? "header-account is-active"
+            : "header-account"
+        }
+        aria-expanded={menuOpen}
+        aria-haspopup="menu"
+        aria-controls={menuId}
+        onClick={() => setMenuOpen((value) => !value)}
+      >
+        <HeaderAvatar image={image} name={name} email={email} />
+        <span className="header-account-name">{displayName}</span>
+        {isAdmin ? (
+          <span className="header-admin-badge" aria-hidden="true">
+            Admin
+          </span>
+        ) : null}
+        <span className="header-account-caret" aria-hidden="true" />
+      </button>
+
+      <div
+        id={menuId}
+        className="header-account-dropdown"
+        role="menu"
+        hidden={!menuOpen}
+      >
+        <Link
+          href="/account"
+          role="menuitem"
+          className={
+            accountActive
+              ? "header-account-item is-active"
+              : "header-account-item"
+          }
+          aria-current={accountActive ? "page" : undefined}
+          onClick={closeAndNavigate}
+        >
+          <NavIcon name="account" size={15} />
+          <span>Account</span>
+        </Link>
+
+        {isAdmin ? (
+          <Link
+            href="/admin"
+            role="menuitem"
+            className="header-account-item"
+            onClick={closeAndNavigate}
+          >
+            <NavIcon name="admin" size={15} />
+            <span>Admin</span>
+          </Link>
+        ) : null}
+
+        {showPitchLink ? (
+          <Link
+            href="/pitch"
+            role="menuitem"
+            className={
+              linkActive(pathname, "/pitch")
+                ? "header-account-item is-active"
+                : "header-account-item"
+            }
+            aria-current={
+              linkActive(pathname, "/pitch") ? "page" : undefined
+            }
+            onClick={closeAndNavigate}
+            title="Open pitch mode"
+          >
+            <NavIcon name="features" size={15} />
+            <span>Pitch</span>
+          </Link>
+        ) : null}
+
+        <div className="header-account-divider" role="separator" />
+
+        <button
+          type="button"
+          role="menuitem"
+          className="header-account-item header-account-signout"
+          onClick={() => {
+            setMenuOpen(false);
+            onNavigate();
+            void signOut();
+          }}
+        >
+          <NavIcon name="logout" size={15} />
+          <span>Sign out</span>
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -167,77 +327,53 @@ export function SiteHeader() {
     </Link>
   ) : null;
 
-  const actions = session ? (
-    <>
-      {pitchLink}
-      <Link
-        href="/notifications"
-        className="header-settings nav-link"
-        onClick={() => setOpen(false)}
-      >
-        <NavIcon name="alerts" size={15} />
-        <span>Alerts</span>
-      </Link>
-      <Link
-        href="/account"
-        className={
-          linkActive(pathname, "/account")
-            ? "header-account is-active"
-            : "header-account"
-        }
-        aria-current={linkActive(pathname, "/account") ? "page" : undefined}
-        onClick={() => setOpen(false)}
-      >
-        <HeaderAvatar
+  let actions: ReactNode;
+  if (session) {
+    actions = (
+      <>
+        <Link
+          href="/notifications"
+          className="header-settings nav-link"
+          onClick={() => setOpen(false)}
+        >
+          <NavIcon name="alerts" size={15} />
+          <span>Alerts</span>
+        </Link>
+        <AccountMenu
+          key={pathname}
+          displayName={displayName}
           image={session.user.image}
           name={session.user.name}
           email={session.user.email}
+          isAdmin={isAdmin}
+          showPitchLink={showPitchLink}
+          pathname={pathname}
+          onNavigate={() => setOpen(false)}
         />
-        <span className="header-account-name">{displayName}</span>
-      </Link>
-      {isAdmin ? (
+      </>
+    );
+  } else {
+    actions = (
+      <>
+        {pitchLink}
         <Link
-          href="/admin"
-          className="header-admin-badge"
+          href="/login"
+          className="header-settings nav-link"
           onClick={() => setOpen(false)}
         >
-          Admin
+          <NavIcon name="login" size={15} />
+          <span>Sign in</span>
         </Link>
-      ) : null}
-      <button
-        type="button"
-        className="header-signout"
-        aria-label="Sign out"
-        title="Sign out"
-        onClick={() => {
-          setOpen(false);
-          void signOut();
-        }}
-      >
-        <NavIcon name="logout" size={15} />
-        <span className="header-signout-label">Sign out</span>
-      </button>
-    </>
-  ) : (
-    <>
-      {pitchLink}
-      <Link
-        href="/login"
-        className="header-settings nav-link"
-        onClick={() => setOpen(false)}
-      >
-        <NavIcon name="login" size={15} />
-        <span>Sign in</span>
-      </Link>
-      <Link
-        href="/signup"
-        className="btn-primary header-cta nav-link"
-        onClick={() => setOpen(false)}
-      >
-        <span>Get started</span>
-      </Link>
-    </>
-  );
+        <Link
+          href="/signup"
+          className="btn-primary header-cta nav-link"
+          onClick={() => setOpen(false)}
+        >
+          <span>Get started</span>
+        </Link>
+      </>
+    );
+  }
 
   return (
     <header className={`site-header${open ? " is-nav-open" : ""}`}>
