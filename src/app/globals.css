@@ -668,6 +668,7 @@ button.btn-ghost {
   background: rgba(255, 255, 255, 0.42);
   border-block: 1px solid var(--line);
   max-width: none;
+  padding-block: 3.25rem;
   padding-inline: max(1.5rem, calc((100% - 1120px) / 2 + 1.5rem));
 }
 
