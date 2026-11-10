@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { requireApiSession, unauthorized } from "@/lib/api-auth";
+import {
+  isAdminEmail,
+  requireApiSession,
+  unauthorized,
+} from "@/lib/api-auth";
 import { createJob, listJobs } from "@/lib/store";
 import type { JobCategory, JobPriority } from "@/lib/types";
 
@@ -13,8 +17,10 @@ export async function GET(request: Request) {
   const category = searchParams.get("category");
 
   let jobs = await listJobs();
-  // Scope to the signed-in owner's jobs (legacy rows without ownerId stay hidden).
-  jobs = jobs.filter((job) => job.ownerId === session.user.id);
+  // Owners see their jobs; allow-listed admins see the full demo/console set.
+  if (!isAdminEmail(session.user.email)) {
+    jobs = jobs.filter((job) => job.ownerId === session.user.id);
+  }
   if (status) jobs = jobs.filter((job) => job.status === status);
   if (category) jobs = jobs.filter((job) => job.category === category);
   if (q) {

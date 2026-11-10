@@ -1,5 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { isAdminEmail } from "@/lib/api-auth";
+import { getServerSession } from "@/lib/session";
 import { listJobs } from "@/lib/store";
 import { JobsList } from "@/components/JobsList";
 
@@ -10,7 +13,13 @@ export const metadata: Metadata = {
 };
 
 export default async function JobsPage() {
-  const jobs = await listJobs();
+  const session = await getServerSession();
+  if (!session) redirect("/login?next=/jobs");
+
+  let jobs = await listJobs();
+  if (!isAdminEmail(session.user.email)) {
+    jobs = jobs.filter((job) => job.ownerId === session.user.id);
+  }
 
   return (
     <div className="page-shell wide jobs-page">

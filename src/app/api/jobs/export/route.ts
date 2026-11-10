@@ -1,13 +1,19 @@
 import { listJobs } from "@/lib/store";
 import { statusLabel, categoryLabel } from "@/lib/format";
-import { requireApiSession, unauthorized } from "@/lib/api-auth";
+import {
+  isAdminEmail,
+  requireApiSession,
+  unauthorized,
+} from "@/lib/api-auth";
 
 export async function GET() {
   const session = await requireApiSession();
   if (!session) return unauthorized();
-  void session;
 
-  const jobs = await listJobs();
+  let jobs = await listJobs();
+  if (!isAdminEmail(session.user.email)) {
+    jobs = jobs.filter((job) => job.ownerId === session.user.id);
+  }
   const header = [
     "id",
     "title",

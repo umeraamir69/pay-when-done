@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireApiSession, unauthorized } from "@/lib/api-auth";
-import { createJob, getJob } from "@/lib/store";
+import { requireOwnedJob } from "@/lib/job-access";
+import { createJob } from "@/lib/store";
 
 export async function POST(
   _request: Request,
@@ -10,13 +11,9 @@ export async function POST(
   if (!session) return unauthorized();
 
   const { id } = await context.params;
-  const job = await getJob(id);
-  if (!job) {
-    return NextResponse.json({ error: "Job not found." }, { status: 404 });
-  }
-  if (job.ownerId && job.ownerId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireOwnedJob(id, session);
+  if (access.error) return access.error;
+  const job = access.job!;
 
   const copy = await createJob(
     {
