@@ -24,6 +24,7 @@ export function PitchDeck() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const total = PITCH_SLIDES.length;
   const slide = PITCH_SLIDES[index];
+  const progress = ((index + 1) / total) * 100;
 
   const exitPitch = useCallback(() => {
     writePitchModePreference(false);
@@ -100,9 +101,7 @@ export function PitchDeck() {
         ? " pitch-slide--accent"
         : "";
 
-  const showLiveStats =
-    Boolean(stats) &&
-    (slide.id === "live-jobs" || slide.id === "live-admin");
+  const showLiveStats = Boolean(stats) && slide.id === "admin";
 
   return (
     <div className="pitch-root" role="region" aria-label="Pitch mode">
@@ -129,6 +128,7 @@ export function PitchDeck() {
               }
               aria-label={`Slide ${i + 1}: ${item.title}`}
               aria-current={i === index ? "step" : undefined}
+              title={item.eyebrow}
               onClick={() => setIndex(i)}
             />
           ))}
@@ -136,12 +136,29 @@ export function PitchDeck() {
 
         <div className="pitch-chrome-actions">
           <span className="pitch-step-label" aria-live="polite">
-            {index + 1} / {total}
+            {slide.eyebrow}
+            <span className="pitch-step-count">
+              {index + 1}/{total}
+            </span>
           </span>
+          <Link href="/admin" className="pitch-admin-link" title="Admin console">
+            Admin
+          </Link>
           <button type="button" className="pitch-exit" onClick={exitPitch}>
             Exit
             <kbd>Esc</kbd>
           </button>
+        </div>
+
+        <div
+          className="pitch-progress-bar"
+          role="progressbar"
+          aria-valuemin={1}
+          aria-valuemax={total}
+          aria-valuenow={index + 1}
+          aria-label="Pitch progress"
+        >
+          <span style={{ width: `${progress}%` }} />
         </div>
       </header>
 
