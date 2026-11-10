@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useId, useState } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
+import { initialsFromName } from "@/lib/avatar";
 import { BrandMark } from "@/components/BrandMark";
 import { NavIcon, type NavIconName } from "@/components/NavIcons";
 import { PitchModeEntry } from "@/components/PitchModeEntry";
@@ -23,6 +24,7 @@ const marketingLinks: NavLink[] = [
   { href: "/docs", label: "Docs", icon: "docs" },
 ];
 
+/** Client hint mirroring ADMIN_EMAILS for header chrome (Pitch + Admin badge). */
 const ADMIN_HINT_EMAILS = new Set(
   (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "umer@umer.com")
     .split(",")
@@ -34,9 +36,40 @@ function linkActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function isPitchAdmin(email: string | null | undefined) {
+function isAdminHint(email: string | null | undefined) {
   if (!email) return false;
   return ADMIN_HINT_EMAILS.has(email.toLowerCase());
+}
+
+function HeaderAvatar({
+  image,
+  name,
+  email,
+}: {
+  image?: string | null;
+  name?: string | null;
+  email?: string | null;
+}) {
+  const initials = initialsFromName(name, email);
+  return (
+    <span
+      className="header-avatar"
+      role={image ? "img" : undefined}
+      aria-label={image ? "Profile picture" : undefined}
+      aria-hidden={image ? undefined : true}
+      style={
+        image
+          ? {
+              backgroundImage: `url(${image})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : undefined
+      }
+    >
+      {image ? null : <span className="header-avatar-initials">{initials}</span>}
+    </span>
+  );
 }
 
 export function SiteHeader() {
@@ -47,6 +80,7 @@ export function SiteHeader() {
   const menuId = useId();
   const isAdminRoute = pathname.startsWith("/admin");
   const isPitchRoute = pathname.startsWith("/pitch");
+  const isAdmin = isAdminHint(session?.user?.email);
 
   useEffect(() => {
     setOpen(false);
@@ -79,7 +113,8 @@ export function SiteHeader() {
     );
   }
 
-  const showPitchLink = pitchPref || isPitchAdmin(session?.user?.email);
+  const showPitchLink = pitchPref || isAdmin;
+  const displayName = session?.user?.name || session?.user?.email || "Account";
 
   const navLinks = (
     <>
@@ -145,27 +180,42 @@ export function SiteHeader() {
       </Link>
       <Link
         href="/account"
-        className="header-account"
+        className={
+          linkActive(pathname, "/account")
+            ? "header-account is-active"
+            : "header-account"
+        }
+        aria-current={linkActive(pathname, "/account") ? "page" : undefined}
         onClick={() => setOpen(false)}
       >
-        <NavIcon name="account" size={16} className="header-account-icon" />
-        <span className="header-account-copy">
-          <span className="header-account-label">Account</span>
-          <span className="header-account-name">
-            {session.user.name || session.user.email}
-          </span>
-        </span>
+        <HeaderAvatar
+          image={session.user.image}
+          name={session.user.name}
+          email={session.user.email}
+        />
+        <span className="header-account-name">{displayName}</span>
       </Link>
+      {isAdmin ? (
+        <Link
+          href="/admin"
+          className="header-admin-badge"
+          onClick={() => setOpen(false)}
+        >
+          Admin
+        </Link>
+      ) : null}
       <button
         type="button"
-        className="btn-ghost header-cta nav-link"
+        className="header-signout"
+        aria-label="Sign out"
+        title="Sign out"
         onClick={() => {
           setOpen(false);
           void signOut();
         }}
       >
         <NavIcon name="logout" size={15} />
-        <span>Sign out</span>
+        <span className="header-signout-label">Sign out</span>
       </button>
     </>
   ) : (
