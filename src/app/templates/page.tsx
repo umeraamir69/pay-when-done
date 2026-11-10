@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AskAiTemplate } from "@/components/AskAiTemplate";
 import { TemplatesLibrary } from "@/components/TemplatesLibrary";
 import { JOB_TEMPLATES } from "@/lib/templates";
 
@@ -15,7 +16,8 @@ export default function TemplatesPage() {
           <p className="lede">
             Battle-tested briefs with clear “done” criteria and suggested
             amounts. Pick one, fund escrow, and get paid when the work checks
-            out — {JOB_TEMPLATES.length} ready to customize.
+            out — {JOB_TEMPLATES.length} ready to customize. Or ask AI to draft
+            a new one from a plain-language description.
           </p>
         </div>
         <Link href="/create" className="btn-primary">
@@ -23,6 +25,7 @@ export default function TemplatesPage() {
         </Link>
       </div>
 
+      <AskAiTemplate />
       <TemplatesLibrary />
     </div>
   );

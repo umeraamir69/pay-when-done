@@ -6,6 +6,7 @@ import {
   FormEvent,
   Suspense,
   useDeferredValue,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -17,6 +18,7 @@ import {
   getTemplateById,
   searchTemplates,
 } from "@/lib/templates";
+import { loadTemplateDraft } from "@/lib/template-draft";
 import { categoryLabel, formatMoney, priorityLabel } from "@/lib/format";
 import { withTopProgress } from "@/lib/top-progress";
 import { BusySpinner } from "@/components/TableControls";
@@ -94,11 +96,10 @@ function CreateJobFormWizard({
 }) {
   const router = useRouter();
   const reduce = useReducedMotion();
-  const initial = getTemplateById(templateParam) || JOB_TEMPLATES[0];
+  const catalogHit = getTemplateById(templateParam);
+  const initial = catalogHit || JOB_TEMPLATES[0];
 
-  const [stepIndex, setStepIndex] = useState(() =>
-    getTemplateById(templateParam) ? 1 : 0,
-  );
+  const [stepIndex, setStepIndex] = useState(() => (catalogHit ? 1 : 0));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
@@ -115,13 +116,37 @@ function CreateJobFormWizard({
   const [autoPayoutOnRelease, setAutoPayoutOnRelease] = useState(true);
   const [createInvoiceOnFund, setCreateInvoiceOnFund] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<string | null>(
-    initial.id,
+    catalogHit ? catalogHit.id : null,
   );
 
   const [templateQuery, setTemplateQuery] = useState("");
   const [templateCategory, setTemplateCategory] =
     useState<CategoryFilter>("all");
   const deferredQuery = useDeferredValue(templateQuery);
+
+  // AI / custom drafts live in sessionStorage — apply after mount to avoid SSR mismatch.
+  useEffect(() => {
+    if (!templateParam || catalogHit) return;
+    const draft = loadTemplateDraft();
+    if (
+      !draft ||
+      !(
+        draft.id === templateParam ||
+        templateParam === "draft" ||
+        templateParam.startsWith("ai-")
+      )
+    ) {
+      return;
+    }
+    setActiveTemplate(null);
+    setTitle(draft.title);
+    setBrief(draft.brief);
+    setAmount(String(draft.amount));
+    setCategory(draft.category);
+    setPriority(draft.priority);
+    setTags(draft.tags.join(", "));
+    setStepIndex(1);
+  }, [templateParam, catalogHit]);
 
   const step = STEPS[stepIndex];
   const isFirst = stepIndex === 0;

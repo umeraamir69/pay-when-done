@@ -9,7 +9,7 @@ import {
 } from "@/lib/templates";
 import { categoryLabel, formatMoney } from "@/lib/format";
 import type { JobCategory } from "@/lib/types";
-import { FadeIn, FadeItem, Stagger } from "@/components/Motion";
+import { FadeIn } from "@/components/Motion";
 
 type CategoryFilter = JobCategory | "all";
 
@@ -95,37 +95,35 @@ export function TemplatesLibrary() {
           </button>
         </FadeIn>
       ) : (
-        <Stagger className="templates-grid">
+        <div className="templates-grid">
           {results.map((template) => (
-            <FadeItem key={template.id}>
-              <article className="template-card panel">
-                <div className="template-card-top">
-                  <p className="eyebrow">{categoryLabel(template.category)}</p>
-                  <strong className="template-amount">
-                    {formatMoney(template.amount)}
-                  </strong>
-                </div>
-                <h2>{template.title}</h2>
-                <p className="muted template-audience">{template.audience}</p>
-                <p className="brief">{template.brief}</p>
-                <div className="job-row-meta">
-                  <span className="status-chip">{template.priority}</span>
-                  {template.tags.map((tag) => (
-                    <span key={tag} className="status-chip">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <Link
-                  href={`/create?template=${template.id}`}
-                  className="btn-primary template-card-cta"
-                >
-                  Use template
-                </Link>
-              </article>
-            </FadeItem>
+            <article key={template.id} className="template-card panel">
+              <div className="template-card-top">
+                <p className="eyebrow">{categoryLabel(template.category)}</p>
+                <strong className="template-amount">
+                  {formatMoney(template.amount)}
+                </strong>
+              </div>
+              <h2>{template.title}</h2>
+              <p className="muted template-audience">{template.audience}</p>
+              <p className="brief">{template.brief}</p>
+              <div className="job-row-meta">
+                <span className="status-chip">{template.priority}</span>
+                {template.tags.map((tag) => (
+                  <span key={tag} className="status-chip">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <Link
+                href={`/create?template=${template.id}`}
+                className="btn-primary template-card-cta"
+              >
+                Use template
+              </Link>
+            </article>
           ))}
-        </Stagger>
+        </div>
       )}
     </div>
   );

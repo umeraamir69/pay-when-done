@@ -12,6 +12,11 @@ export type JobTemplate = {
   audience: string;
 };
 
+/** AI- or heuristic-generated template ready for create-job prefill. */
+export type GeneratedTemplate = JobTemplate & {
+  provider: "muse" | "mock";
+};
+
 export const TEMPLATE_CATEGORIES: Array<JobCategory | "all"> = [
   "all",
   "cleaning",

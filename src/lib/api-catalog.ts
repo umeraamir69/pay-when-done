@@ -10,6 +10,7 @@ export const API_ROUTES = [
   { method: "POST", path: "/api/jobs/:id/authorize", purpose: "PayPal authorize + optional invoice" },
   { method: "POST", path: "/api/jobs/:id/proof", purpose: "Upload worker proof" },
   { method: "POST", path: "/api/jobs/:id/verify", purpose: "Muse AI verification" },
+  { method: "POST", path: "/api/templates/generate", purpose: "Ask AI to draft a job template" },
   { method: "POST", path: "/api/jobs/:id/release", purpose: "Capture + optional payout" },
   { method: "POST", path: "/api/jobs/:id/void", purpose: "Void authorization" },
   { method: "POST", path: "/api/jobs/:id/refund", purpose: "Refund captured payment" },
