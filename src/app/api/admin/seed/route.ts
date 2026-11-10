@@ -18,6 +18,11 @@ export async function POST(request: Request) {
     }
   }
 
-  const jobs = await seedDemoJobs();
-  return NextResponse.json({ ok: true, count: jobs.length });
+  const jobs = await seedDemoJobs(admin.session!.user.id);
+  const owned = jobs.filter((job) => job.ownerId === admin.session!.user.id);
+  return NextResponse.json({
+    ok: true,
+    count: owned.length,
+    total: jobs.length,
+  });
 }

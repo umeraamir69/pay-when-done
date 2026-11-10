@@ -187,7 +187,8 @@ async function main() {
 
   await clearPitchSeedDomain();
 
-  const owner = (i) => parties[i % parties.length].id;
+  // /api/jobs scopes by ownerId — attach pitch jobs to admin for the demo.
+  const ownerId = admin.id;
 
   const jobSpecs = [
     {
@@ -524,7 +525,7 @@ async function main() {
         proofNotes: proofNotes || null,
         proofImageDataUrl: proofImageDataUrl || null,
         internalNotes: `${SEED_NOTE} demo job ${String(i + 1).padStart(2, "0")}`,
-        ownerId: owner(i),
+        ownerId,
         createdAt: createdAt || daysAgo(i + 1),
         updatedAt: hoursAgo(i),
         paypalJson: rest.paypalOrderId

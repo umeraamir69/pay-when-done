@@ -363,219 +363,33 @@ export async function getStats(): Promise<DashboardStats> {
   };
 }
 
-export async function seedDemoJobs(): Promise<Job[]> {
-  await prisma.ledgerEntry.deleteMany();
-  await prisma.invoiceRecord.deleteMany();
-  await prisma.payoutRecord.deleteMany();
-  await prisma.webhookEvent.deleteMany();
-  await prisma.job.deleteMany();
+export async function seedDemoJobs(ownerId?: string): Promise<Job[]> {
+  // Same dataset as `npm run db:seed` / `db:seed:demo` (prisma/seed.mjs).
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const execFileAsync = promisify(execFile);
 
-  const now = Date.now();
-  const mk = (actor: ActorRole, type: string, message: string, actorName?: string) =>
-    makeActivity(actor, type, message, actorName);
+  await execFileAsync(process.execPath, ["prisma/seed.mjs"], {
+    cwd: process.cwd(),
+    env: process.env,
+    maxBuffer: 10 * 1024 * 1024,
+  });
 
-  const demos: CreateJobInput[] = [
-    {
-      title: "Bathroom deep clean + grout",
-      brief:
-        "Clean both bathrooms. Remove soap scum from glass. Whiten floor grout. Empty trash. After photos required.",
-      amount: 85,
-      category: "cleaning",
-      priority: "high",
-      tags: ["same-day", "residential"],
-      clientName: "Alex Rivera",
-      workerName: "Jordan Lee",
-      workerEmail: "jordan@example.com",
-      autoPayoutOnRelease: true,
-      createInvoiceOnFund: true,
-    },
-    {
-      title: "Studio move — 2 hours",
-      brief:
-        "Load/unload studio. Protect floors. Assemble bed. Photos of empty unit and set-up bed.",
-      amount: 140,
-      category: "moving",
-      priority: "normal",
-      tags: ["weekend"],
-      clientName: "Sam Okonkwo",
-      workerName: "Chris Patel",
-      workerEmail: "chris@example.com",
-    },
-    {
-      title: "SAT math tutoring — 90 min",
-      brief:
-        "90-minute SAT math session. One-page summary + 5 practice problems. Session end screenshot.",
-      amount: 65,
-      category: "tutoring",
-      priority: "low",
-      tags: ["remote"],
-      clientName: "Priya Shah",
-      workerName: "Maya Chen",
-      workerEmail: "maya@example.com",
-    },
-    {
-      title: "Deck railing repair",
-      brief:
-        "Replace loose railing posts on backyard deck. Sand and seal cut ends. Safety check photos.",
-      amount: 220,
-      category: "handyman",
-      priority: "high",
-      tags: ["urgent"],
-      clientName: "Morgan Ellis",
-      workerName: "Lee Nguyen",
-      workerEmail: "lee@example.com",
-    },
-  ];
-
-  const created: Job[] = [];
-  for (const input of demos) {
-    created.push(await createJob(input));
+  let resolvedOwnerId = ownerId;
+  if (!resolvedOwnerId) {
+    const admin = await prisma.user.findUnique({
+      where: { email: "umer@umer.com" },
+      select: { id: true },
+    });
+    resolvedOwnerId = admin?.id;
   }
 
-  await updateJob(created[0].id, {
-    status: "funded",
-    paypalOrderId: "MOCK-ORDER-DEMO1",
-    paypalAuthorizationId: "MOCK-AUTH-DEMO1",
-    paypalInvoiceId: "MOCK-INV-DEMO1",
-    paypal: {
-      orderId: "MOCK-ORDER-DEMO1",
-      authorizationId: "MOCK-AUTH-DEMO1",
-      invoiceId: "MOCK-INV-DEMO1",
-      invoiceStatus: "SENT",
-      syncedAt: new Date().toISOString(),
-    },
-    milestones: [
-      {
-        id: crypto.randomUUID(),
-        title: "Bathrooms cleaned",
-        amount: 60,
-        status: "funded",
-      },
-      {
-        id: crypto.randomUUID(),
-        title: "Grout refresh photos",
-        amount: 25,
-        status: "pending",
-      },
-    ],
-    activity: [
-      ...created[0].activity,
-      mk("paypal", "funds_held", "PayPal authorization held $85"),
-      mk("paypal", "invoice_sent", "Invoice sent to client"),
-    ],
-  });
-
-  await updateJob(created[1].id, {
-    status: "ai_approved",
-    paypalOrderId: "MOCK-ORDER-DEMO2",
-    paypalAuthorizationId: "MOCK-AUTH-DEMO2",
-    proofNotes:
-      "Unit emptied, floors protected, bed assembled. Photos attached.",
-    proofImageDataUrl:
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-    aiVerdict: {
-      approved: true,
-      confidence: 0.86,
-      summary:
-        "Proof notes cover load/unload, floor protection, and bed assembly.",
-      matchedRequirements: ["empty unit", "bed assembled", "floor protection"],
-      missingRequirements: [],
-      checkedAt: new Date(now - 1000 * 60 * 30).toISOString(),
-      provider: "muse",
-    },
-  });
-
-  await updateJob(created[2].id, {
-    status: "released",
-    paypalCaptureId: "MOCK-CAPTURE-DEMO3",
-    paypalPayoutBatchId: "MOCK-PAYOUT-DEMO3",
-    workerRating: 5,
-    aiVerdict: {
-      approved: true,
-      confidence: 0.91,
-      summary: "Summary and practice set present; session evidence accepted.",
-      matchedRequirements: ["summary", "practice problems"],
-      missingRequirements: [],
-      checkedAt: new Date(now - 1000 * 60 * 60 * 90).toISOString(),
-      provider: "muse",
-    },
-  });
-
-  await updateJob(created[3].id, {
-    status: "disputed",
-    paypalAuthorizationId: "MOCK-AUTH-DEMO4",
-    disputes: [
-      {
-        id: crypto.randomUUID(),
-        at: new Date(now - 1000 * 60 * 50).toISOString(),
-        author: "client",
-        authorName: "Morgan Ellis",
-        body: "Railing still wobbles on the left side. Need rework before release.",
-      },
-      {
-        id: crypto.randomUUID(),
-        at: new Date(now - 1000 * 60 * 20).toISOString(),
-        author: "worker",
-        authorName: "Lee Nguyen",
-        body: "Will reinforce with additional brackets this evening and re-upload proof.",
-      },
-    ],
-  });
-
-  await recordLedger({
-    jobId: created[0].id,
-    jobTitle: created[0].title,
-    type: "authorize",
-    amount: 85,
-    currency: "USD",
-    paypalId: "MOCK-AUTH-DEMO1",
-    status: "CREATED",
-    mock: true,
-  });
-  await recordLedger({
-    jobId: created[2].id,
-    jobTitle: created[2].title,
-    type: "capture",
-    amount: 65,
-    currency: "USD",
-    paypalId: "MOCK-CAPTURE-DEMO3",
-    status: "COMPLETED",
-    mock: true,
-  });
-  await recordLedger({
-    jobId: created[2].id,
-    jobTitle: created[2].title,
-    type: "payout",
-    amount: 65,
-    currency: "USD",
-    paypalId: "MOCK-PAYOUT-DEMO3",
-    status: "SUCCESS",
-    mock: true,
-  });
-
-  await recordInvoice({
-    id: crypto.randomUUID(),
-    jobId: created[0].id,
-    paypalInvoiceId: "MOCK-INV-DEMO1",
-    status: "SENT",
-    amount: 85,
-    currency: "USD",
-    recipientEmail: "alex@example.com",
-    createdAt: new Date().toISOString(),
-    mock: true,
-  });
-
-  await recordPayout({
-    id: crypto.randomUUID(),
-    jobId: created[2].id,
-    batchId: "MOCK-PAYOUT-DEMO3",
-    status: "SUCCESS",
-    amount: 65,
-    currency: "USD",
-    receiver: "maya@example.com",
-    createdAt: new Date().toISOString(),
-    mock: true,
-  });
+  if (resolvedOwnerId) {
+    await prisma.job.updateMany({
+      where: { internalNotes: { startsWith: "[pitch-seed]" } },
+      data: { ownerId: resolvedOwnerId },
+    });
+  }
 
   return listJobs();
 }
