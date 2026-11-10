@@ -2047,6 +2047,11 @@ select {
   min-width: 120px;
 }
 
+/* Space Add milestone button under Title/Amount row */
+.form-row + .btn-primary {
+  margin-top: 0.85rem;
+}
+
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
