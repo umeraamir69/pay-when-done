@@ -599,8 +599,8 @@ export function JobWorkspace({ initialJob }: Props) {
                 ))
               )}
             </div>
-            <div className="form-row">
-              <label>
+            <div className="panel-form dispute-compose">
+              <label className="dispute-as-field">
                 As
                 <select
                   value={disputeAuthor}
@@ -613,24 +613,24 @@ export function JobWorkspace({ initialJob }: Props) {
                   <option value="admin">Admin</option>
                 </select>
               </label>
+              <label>
+                Message
+                <textarea
+                  rows={3}
+                  value={disputeBody}
+                  onChange={(e) => setDisputeBody(e.target.value)}
+                  placeholder="Describe the issue or proposed fix…"
+                />
+              </label>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={sendDispute}
+                disabled={busy === "dispute"}
+              >
+                {busy === "dispute" ? <BusySpinner label="Sending…" /> : "Post dispute note"}
+              </button>
             </div>
-            <label>
-              Message
-              <textarea
-                rows={3}
-                value={disputeBody}
-                onChange={(e) => setDisputeBody(e.target.value)}
-                placeholder="Describe the issue or proposed fix…"
-              />
-            </label>
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={sendDispute}
-              disabled={busy === "dispute"}
-            >
-              {busy === "dispute" ? <BusySpinner label="Sending…" /> : "Post dispute note"}
-            </button>
           </article>
         ) : null}
 
