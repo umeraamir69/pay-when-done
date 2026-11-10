@@ -15,6 +15,11 @@
   --font-display: var(--font-display), Georgia, serif;
   --font-body: var(--font-body), system-ui, sans-serif;
   --radius: 1.2rem;
+  /* Homepage vertical rhythm */
+  --section-pad-y: 4.75rem;
+  --section-pad-y-tight: 4rem;
+  --section-pad-y-finale: 5.5rem;
+  --section-pad-x: 1.5rem;
 }
 
 @theme inline {
@@ -218,15 +223,15 @@ pre {
 .footer-inner {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 2.75rem 1.5rem 1.75rem;
+  padding: 3.75rem var(--section-pad-x) 2.5rem;
   display: grid;
   grid-template-columns: 1.55fr repeat(3, minmax(0, 1fr));
-  gap: 2rem 1.75rem;
+  gap:  2.35rem 1.75rem;
 }
 
 .footer-brand {
   display: grid;
-  gap: 0.85rem;
+  gap: 1rem;
   align-content: start;
   max-width: 22rem;
 }
@@ -249,7 +254,7 @@ pre {
 
 .footer-col {
   display: grid;
-  gap: 0.85rem;
+  gap: 1rem;
   align-content: start;
 }
 
@@ -267,7 +272,7 @@ pre {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.55rem;
+  gap: 0.7rem;
   align-content: start;
 }
 
@@ -295,12 +300,12 @@ pre {
 .footer-bottom {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 1.1rem 1.5rem 1.6rem;
+  padding: 1.45rem var(--section-pad-x) 2.1rem;
   border-top: 1px solid rgba(16, 35, 31, 0.1);
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 0.5rem 1.25rem;
+  gap:  0.65rem 1.25rem;
 }
 
 .footer-legal {
@@ -361,8 +366,8 @@ button.btn-ghost {
   min-height: calc(100vh - 58px);
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
-  gap: 2rem;
-  padding: 3.25rem 1.5rem 4rem;
+  gap:  2.25rem;
+  padding:  3.75rem var(--section-pad-x) 5rem;
   max-width: 1120px;
   margin: 0 auto;
   align-items: end;
@@ -474,9 +479,15 @@ button.btn-ghost {
 
 .cta-row {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1.75rem;
+  gap: 0.85rem;
+  margin-top:  2rem;
   flex-wrap: wrap;
+}
+  flex-wrap: wrap;
+}
+
+.cta-row-section {
+  margin-top: 2.25rem;
 }
 
 .hero-stage {
@@ -623,7 +634,7 @@ button.btn-ghost {
 .section {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 1.25rem 1.5rem 3.5rem;
+  padding: var(--section-pad-y) var(--section-pad-x);
 }
 
 .section h2,
@@ -637,7 +648,7 @@ button.btn-ghost {
 
 .section h2 {
   font-size: clamp(1.8rem, 3vw, 2.4rem);
-  margin: 0.35rem 0 1.1rem;
+  margin: 0.45rem 0 1.5rem;
   max-width: 28rem;
   line-height: 1.1;
 }
@@ -645,11 +656,11 @@ button.btn-ghost {
 .split-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1.35rem 1.5rem;
 }
 
 .story-block {
-  padding: 1.35rem 0;
+  padding: 1.6rem 0;
   border-top: 1px solid var(--line);
 }
 
@@ -668,8 +679,12 @@ button.btn-ghost {
   background: rgba(255, 255, 255, 0.42);
   border-block: 1px solid var(--line);
   max-width: none;
-  padding-block: 3.25rem;
+  padding-block: var(--section-pad-y);
   padding-inline: max(1.5rem, calc((100% - 1120px) / 2 + 1.5rem));
+  padding-inline: max(
+    var(--section-pad-x),
+    calc((100% - 1120px) / 2 + var(--section-pad-x))
+  );
 }
 
 .steps-rail {
@@ -678,13 +693,13 @@ button.btn-ghost {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap: 1.35rem 1.25rem;
 }
 
 .steps-rail li {
   display: grid;
-  gap: 0.45rem;
-  padding-top: 0.85rem;
+  gap: 0.55rem;
+  padding-top:  1.05rem;
   border-top: 3px solid var(--bg-deep);
 }
 
@@ -703,11 +718,11 @@ button.btn-ghost {
 .audience-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap: 1.35rem 1.25rem;
 }
 
 .audience-grid article {
-  padding: 1rem 0;
+  padding: 1.25rem 0;
   border-top: 1px solid var(--line);
 }
 
@@ -725,7 +740,11 @@ button.btn-ghost {
   background: var(--bg-deep);
   color: #f4fffa;
   max-width: none;
-  padding: 3rem max(1.5rem, calc((100% - 1120px) / 2 + 1.5rem));
+  padding: var(--section-pad-y-tight)
+    max(
+      var(--section-pad-x),
+      calc((100% - 1120px) / 2 + var(--section-pad-x))
+    );
   border: none;
 }
 
@@ -740,7 +759,7 @@ button.btn-ghost {
 .stack-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+  gap: 1.65rem 1.5rem;
 }
 
 .stack-row h3 {
@@ -756,7 +775,11 @@ button.btn-ghost {
 
 .cta-finale {
   text-align: left;
-  padding-bottom: 5rem;
+  padding-block: var(--section-pad-y-finale);
+}
+
+.cta-finale .lede {
+  margin-top: 0.35rem;
 }
 
 .cta-finale h2 {
@@ -1327,12 +1350,33 @@ textarea {
 
   .hero {
     align-items: stretch;
-    padding-top: 2rem;
+    padding: 2.25rem 1.25rem 3.25rem;
     min-height: auto;
   }
 
   .hero-stage {
     min-height: 300px;
+  }
+
+  .section,
+  .band,
+  .band-dark {
+    --section-pad-y: 3.5rem;
+    --section-pad-y-tight: 3.25rem;
+    --section-pad-x: 1.25rem;
+  }
+
+  .cta-finale {
+    --section-pad-y-finale: 4rem;
+    padding-inline: 1.25rem;
+  }
+
+  .footer-inner {
+    padding: 3rem 1.25rem 2rem;
+  }
+
+  .footer-bottom {
+    padding: 1.25rem 1.25rem 1.75rem;
   }
 
   .page-heading-row {
@@ -2213,6 +2257,21 @@ select {
   .settings-grid,
   .footer-inner {
     grid-template-columns: 1fr;
+  }
+
+  .section,
+  .band,
+  .band-dark {
+    --section-pad-y: 3rem;
+    --section-pad-y-tight: 2.85rem;
+  }
+
+  .cta-finale {
+    --section-pad-y-finale: 3.5rem;
+  }
+
+  .site-header {
+    padding: 0.55rem 1.15rem;
   }
 
   .header-settings {
