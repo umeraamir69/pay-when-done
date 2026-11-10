@@ -16,8 +16,9 @@ export default async function JobsPage() {
   const session = await getServerSession();
   if (!session) redirect("/login?next=/jobs");
 
+  const isAdmin = isAdminEmail(session.user.email);
   let jobs = await listJobs();
-  if (!isAdminEmail(session.user.email)) {
+  if (!isAdmin) {
     jobs = jobs.filter((job) => job.ownerId === session.user.id);
   }
 
@@ -32,9 +33,11 @@ export default async function JobsPage() {
           </p>
         </div>
         <div className="cta-row jobs-page-actions">
-          <Link href="/admin" className="btn-ghost">
-            Admin
-          </Link>
+          {isAdmin ? (
+            <Link href="/admin" className="btn-ghost">
+              Admin
+            </Link>
+          ) : null}
           <Link href="/create" className="btn-primary">
             New job
           </Link>

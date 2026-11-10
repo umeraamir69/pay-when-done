@@ -24,12 +24,12 @@ export default function HomePage() {
           animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
           transition={{ duration: reduce ? 0.2 : 0.6, ease }}
         >
-          <p className="eyebrow">PayPal authorize · Muse AI verify · capture</p>
+          <p className="eyebrow">PayPal hold · Muse verify · release</p>
           <h1>PayWhenDone</h1>
           <p className="lede">
             Local gigs hired on Facebook, Nextdoor, or WhatsApp have no
-            protection. Hold the PayPal payment until an AI agent confirms the
-            work matches the brief — then release it.
+            protection. Hold PayPal payment until Muse confirms the work matches
+            the brief — then release it.
           </p>
           <div className="cta-row">
             <Link href="/signup" className="btn-primary">

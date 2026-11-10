@@ -84,7 +84,7 @@ export function SiteFooter() {
 
       <div className="footer-bottom">
         <p className="footer-legal">PayPal AI Hackathon · MIT License</p>
-        <p className="footer-legal muted">
+        <p className="footer-legal muted footer-meta">
           Built for off-platform local gigs — pay when the work is done.
         </p>
       </div>

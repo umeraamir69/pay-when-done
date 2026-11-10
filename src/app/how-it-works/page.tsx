@@ -178,7 +178,7 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <section className="panel demo-panel" style={{ marginTop: "0.5rem" }}>
+      <section className="panel demo-panel">
         <p className="eyebrow">Try it</p>
         <h2>Demo path for judges</h2>
         <p className="muted demo-panel-lede">

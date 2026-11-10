@@ -136,7 +136,7 @@ export function PitchDeck() {
 
         <div className="pitch-chrome-actions">
           <span className="pitch-step-label" aria-live="polite">
-            {slide.eyebrow}
+            <span>{slide.eyebrow}</span>
             <span className="pitch-step-count">
               {index + 1}/{total}
             </span>
