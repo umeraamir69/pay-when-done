@@ -7,12 +7,12 @@ export const metadata: Metadata = {
 
 export default function CreatePage() {
   return (
-    <div className="page-shell">
+    <div className="page-shell create-shell">
       <p className="eyebrow">New escrow</p>
       <h1>Describe the job. Hold the money.</h1>
-      <p className="lede narrow" style={{ marginBottom: "1.5rem" }}>
-        Write acceptance criteria Muse can check. Next you’ll authorize PayPal
-        funds — captured only after verification.
+      <p className="lede narrow create-shell-lede">
+        Five short steps: template, details, people, PayPal options, then
+        review. Funds stay held until Muse verifies the work.
       </p>
       <CreateJobForm />
     </div>
