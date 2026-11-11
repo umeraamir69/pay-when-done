@@ -3,6 +3,8 @@ import {
   captureAuthorization,
   createWorkerPayout,
   isPayPalMock,
+  isPitchSeedJob,
+  shouldMockPayPalId,
 } from "@/lib/paypal";
 import {
   recordLedger,
@@ -39,7 +41,13 @@ export async function POST(
     );
   }
 
+  // Seed/demo auth IDs are sandbox-shaped but not real — mock capture so
+  // pitch release works with PAYPAL_MOCK=false. Real checkout auths stay live.
   const capture = await captureAuthorization(job.paypalAuthorizationId);
+  const usedMock =
+    shouldMockPayPalId(job.paypalAuthorizationId) ||
+    isPayPalMock() ||
+    Boolean(capture.mock);
 
   await recordLedger({
     jobId: job.id,
@@ -49,11 +57,12 @@ export async function POST(
     currency: job.currency,
     paypalId: capture.id,
     status: capture.status || "COMPLETED",
-    mock: isPayPalMock() || Boolean(capture.mock),
+    mock: usedMock,
   });
 
   let payoutBatchId: string | undefined = job.paypalPayoutBatchId;
   let payoutStatus: string | undefined;
+  const forcePayoutMock = usedMock || isPitchSeedJob(job);
 
   if (job.autoPayoutOnRelease) {
     try {
@@ -63,6 +72,7 @@ export async function POST(
         currency: job.currency,
         receiverEmail: job.workerEmail,
         note: `PayWhenDone payout — ${job.title}`,
+        forceMock: forcePayoutMock,
       });
       const batchId: string =
         payout.batch_header?.payout_batch_id || `PAYOUT-${job.id.slice(0, 8)}`;
@@ -83,7 +93,7 @@ export async function POST(
         currency: job.currency,
         receiver: job.workerEmail,
         createdAt: new Date().toISOString(),
-        mock: Boolean(payout.mock || isPayPalMock()),
+        mock: Boolean(payout.mock || forcePayoutMock),
         detail: payout,
       });
 
@@ -95,7 +105,7 @@ export async function POST(
         currency: job.currency,
         paypalId: batchId,
         status: batchStatus,
-        mock: Boolean(payout.mock || isPayPalMock()),
+        mock: Boolean(payout.mock || forcePayoutMock),
       });
     } catch (error) {
       console.error("Auto payout failed:", error);
@@ -128,6 +138,6 @@ export async function POST(
 
   return NextResponse.json({
     job: updated,
-    mock: isPayPalMock() || Boolean(capture.mock),
+    mock: usedMock,
   });
 }

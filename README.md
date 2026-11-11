@@ -81,7 +81,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 **Pitch / demo seed:** `npm run db:seed` (alias `npm run db:seed:demo`) upserts `umer@umer.com` / `umer123123`, demo party users, and a pitch-ready Jobs + Admin dataset (≥10 jobs across held / proof / Muse / released / disputed / refunded / voided, plus ledger, invoices, payouts, webhooks). Re-run is safe: pitch-tagged rows are cleared and re-inserted. Jobs are owned by the admin so `/jobs` and `/admin` populate when you sign in as `umer@umer.com`. Set `ADMIN_EMAILS=umer@umer.com` (see `.env.example`). Admin **Load demo data** runs the same `prisma/seed.mjs` dataset.
 
-Without PayPal keys → mock authorize/capture. Without Muse key → mock AI.
+Without PayPal keys → mock authorize/capture. Without Muse key → mock AI.  
+**Demo note:** Seeded pitch jobs use sandbox-shaped PayPal IDs that are auto-mocked on release/void/sync so the pitch works with live sandbox keys; real checkout authorize→capture stays live.
 
 ### Env
 

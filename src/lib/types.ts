@@ -73,6 +73,8 @@ export type PayPalSnapshot = {
   refundStatus?: string;
   raw?: unknown;
   syncedAt?: string;
+  /** Set by prisma/seed.mjs so release/void can mock without live PayPal. */
+  source?: string;
 };
 
 export type Job = {

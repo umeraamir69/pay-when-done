@@ -7,6 +7,8 @@
  * - Payouts v1 (pay worker after release)
  */
 
+import { isSyntheticPayPalId } from "./paypal-demo-ids";
+
 type PayPalToken = { access_token: string; expires_in: number };
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
@@ -15,6 +17,16 @@ export function isPayPalMock() {
   if (process.env.PAYPAL_MOCK === "true") return true;
   return !(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);
 }
+
+/**
+ * Mock when PAYPAL_MOCK / missing keys, or when the resource id is seed/demo
+ * shaped. Real sandbox authorize→capture IDs from checkout never match.
+ */
+export function shouldMockPayPalId(id?: string | null): boolean {
+  return isPayPalMock() || isSyntheticPayPalId(id);
+}
+
+export { isSyntheticPayPalId, isPitchSeedJob } from "./paypal-demo-ids";
 
 function apiBase() {
   return process.env.PAYPAL_API_BASE || "https://api-m.sandbox.paypal.com";
@@ -131,7 +143,7 @@ export async function createAuthorizationOrder(params: {
 }
 
 export async function getOrder(orderId: string) {
-  if (isPayPalMock() || orderId.startsWith("MOCK-")) {
+  if (shouldMockPayPalId(orderId)) {
     return {
       id: orderId,
       status: "COMPLETED",
@@ -143,7 +155,7 @@ export async function getOrder(orderId: string) {
 }
 
 export async function authorizeOrder(orderId: string) {
-  if (isPayPalMock() || orderId.startsWith("MOCK-")) {
+  if (shouldMockPayPalId(orderId)) {
     return {
       id: orderId,
       status: "COMPLETED",
@@ -181,7 +193,7 @@ export function extractAuthorizationId(authorizeResponse: {
 }
 
 export async function getAuthorization(authorizationId: string) {
-  if (isPayPalMock() || authorizationId.startsWith("MOCK-")) {
+  if (shouldMockPayPalId(authorizationId)) {
     return {
       id: authorizationId,
       status: "CREATED",
@@ -192,7 +204,7 @@ export async function getAuthorization(authorizationId: string) {
 }
 
 export async function captureAuthorization(authorizationId: string) {
-  if (isPayPalMock() || authorizationId.startsWith("MOCK-")) {
+  if (shouldMockPayPalId(authorizationId)) {
     return {
       id: `MOCK-CAPTURE-${authorizationId.slice(-8)}`,
       status: "COMPLETED",
@@ -208,7 +220,7 @@ export async function captureAuthorization(authorizationId: string) {
 }
 
 export async function voidAuthorization(authorizationId: string) {
-  if (isPayPalMock() || authorizationId.startsWith("MOCK-")) {
+  if (shouldMockPayPalId(authorizationId)) {
     return { id: authorizationId, status: "VOIDED", mock: true };
   }
 
@@ -219,7 +231,7 @@ export async function voidAuthorization(authorizationId: string) {
 }
 
 export async function getCapture(captureId: string) {
-  if (isPayPalMock() || captureId.startsWith("MOCK-")) {
+  if (shouldMockPayPalId(captureId)) {
     return { id: captureId, status: "COMPLETED", mock: true };
   }
   return paypalFetch(`/v2/payments/captures/${captureId}`);
@@ -231,7 +243,7 @@ export async function refundCapture(params: {
   currency: string;
   note?: string;
 }) {
-  if (isPayPalMock() || params.captureId.startsWith("MOCK-")) {
+  if (shouldMockPayPalId(params.captureId)) {
     return {
       id: `MOCK-REFUND-${params.captureId.slice(-8)}`,
       status: "COMPLETED",
@@ -263,8 +275,10 @@ export async function createAndSendInvoice(params: {
   /** Invoices typically go to the payer/client */
   recipientEmail: string;
   workerName: string;
+  /** Force mock (e.g. pitch-seed jobs) while live keys remain configured. */
+  forceMock?: boolean;
 }) {
-  if (isPayPalMock()) {
+  if (isPayPalMock() || params.forceMock) {
     return {
       id: `MOCK-INV-${params.jobId.slice(0, 8)}`,
       status: "SENT",
@@ -337,8 +351,10 @@ export async function createWorkerPayout(params: {
   currency: string;
   receiverEmail: string;
   note?: string;
+  /** Force mock (e.g. pitch-seed jobs) while live keys remain configured. */
+  forceMock?: boolean;
 }) {
-  if (isPayPalMock()) {
+  if (isPayPalMock() || params.forceMock) {
     return {
       batch_header: {
         payout_batch_id: `MOCK-PAYOUT-${params.jobId.slice(0, 8)}`,
@@ -381,7 +397,7 @@ export async function createWorkerPayout(params: {
 }
 
 export async function getPayoutBatch(batchId: string) {
-  if (isPayPalMock() || batchId.startsWith("MOCK-")) {
+  if (shouldMockPayPalId(batchId)) {
     return {
       batch_header: {
         payout_batch_id: batchId,

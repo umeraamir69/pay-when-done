@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isPayPalMock, voidAuthorization } from "@/lib/paypal";
+import { shouldMockPayPalId, voidAuthorization } from "@/lib/paypal";
 import { recordLedger, updateJob } from "@/lib/store";
 import { requireApiSession, unauthorized } from "@/lib/api-auth";
 import { requireOwnedJob } from "@/lib/job-access";
@@ -35,6 +35,8 @@ export async function POST(
   }
 
   const result = await voidAuthorization(job.paypalAuthorizationId);
+  const usedMock =
+    shouldMockPayPalId(job.paypalAuthorizationId) || Boolean(result.mock);
 
   await recordLedger({
     jobId: job.id,
@@ -44,7 +46,7 @@ export async function POST(
     currency: job.currency,
     paypalId: job.paypalAuthorizationId,
     status: "VOIDED",
-    mock: isPayPalMock() || Boolean(result.mock),
+    mock: usedMock,
   });
 
   const updated = await updateJob(
@@ -66,6 +68,6 @@ export async function POST(
 
   return NextResponse.json({
     job: updated,
-    mock: isPayPalMock() || Boolean(result.mock),
+    mock: usedMock,
   });
 }

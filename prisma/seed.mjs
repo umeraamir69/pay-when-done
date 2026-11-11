@@ -79,6 +79,9 @@ const partyUsers = [
  * Invoice: INV2-XXXX-XXXX-XXXX-XXXX
  * Payout batch / item: 13-char alphanumeric
  * Webhook event: WH-{17}-{17}
+ *
+ * Keep in sync with src/lib/paypal-demo-ids.ts — release/void/sync mock these
+ * IDs when PAYPAL_MOCK=false so pitch demos never hit RESOURCE_NOT_FOUND.
  */
 const PP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
