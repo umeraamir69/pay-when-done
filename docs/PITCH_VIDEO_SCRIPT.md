@@ -27,16 +27,17 @@
 5. **Audio:** External mic or AirPods; room quiet; say a test line and check levels.
 6. **Pre-warm the app:** Open https://pay-when-done.vercel.app once so cold start isn’t on camera. Optionally seed admin data from `/admin` if the board looks empty.
 7. **Proof image:** Have one clear photo ready (e.g. a cleaned kitchen / finished handyman area) in Downloads.
+8. **Sign in before `/pitch`:** Live job counts and deep-links need the umer admin session.
 
 ### Two recording strategies
 
-**A — Pitch deck first (recommended for clarity)**  
-1. Start at `/pitch` and walk slides 0–11 with narration.  
-2. On key CTAs (“New job”, “Open Admin”), click through to the live product, demo the action, then return or jump ahead.  
-3. End on `/about` for the founder close.
+**A — Pitch walkthrough first (recommended)**  
+1. Start at `/pitch` — **0 · About me** (founder photo + name).  
+2. Advance through each screen step; on primary CTAs (“Open About”, “Open Jobs”, “Open escrow job”), click into the live page, demo briefly, return with browser back or reopen `/pitch`.  
+3. End on **10 · Close** / live Jobs CTA.
 
 **B — Full click-through**  
-Skip the deck as the spine; open the live app and follow the beat order below. Optionally flash `/pitch` for 5–8 seconds at the open and close.
+Skip the deck as the spine; open the live app and follow the beat order below. Optionally flash `/pitch` for 5–8 seconds at the open (About me) and close.
 
 ### Export for Devpost / YouTube
 
@@ -53,16 +54,17 @@ Skip the deck as the spine; open the live app and follow the beat order below. O
 
 | Beat | Time | URL / path |
 |---|---|---|
-| Open + problem | 0:00–0:35 | `/pitch` |
-| Signup / email-first login | 0:35–0:55 | `/login` (or `/signup`) |
-| Create job wizard | 0:55–1:35 | `/create` |
-| PayPal hold | 1:35–1:55 | `/jobs/[id]` |
-| Proof upload | 1:55–2:15 | same job → Flow tab |
-| Muse verify | 2:15–2:40 | same job |
-| Capture / void | 2:40–3:00 | same job |
-| Payout / settlement | 3:00–3:20 | `/admin/payouts` or job receipt |
-| Admin console | 3:20–3:40 | `/admin` |
-| Close / founder | 3:40–4:00 | `/about` (+ optional `/pitch` last slide) |
+| About me / founder | 0:00–0:25 | `/pitch` (slide 0) → optional `/about` |
+| Landing / problem-solution | 0:25–0:45 | `/` or `/how-it-works` |
+| Templates + Ask AI | 0:45–1:00 | `/templates` |
+| Create job wizard | 1:00–1:35 | `/create` |
+| Jobs list (seeded) | 1:35–1:50 | `/jobs` |
+| Escrow flow (hold → proof → Muse → release) | 1:50–2:40 | `/jobs/[id]` (Studio move seed) |
+| PayPal panel / ledger IDs | 2:40–3:00 | tutoring job or `/admin/ledger` |
+| Disputes / milestones | 3:00–3:15 | Deck railing / bathroom seed |
+| Admin console | 3:15–3:35 | `/admin` → ledger / jobs |
+| Account / passkeys | 3:35–3:45 | `/account` (brief) |
+| Close / CTA | 3:45–4:00 | `/pitch` last slide or `/jobs` |
 
 *Times are cues, not hard cuts. Aim for ~3:15 total.*
 
@@ -74,160 +76,135 @@ Format: **[time]** → **ON SCREEN** (clicks) → **SAY** (spoken lines)
 
 ---
 
-### [0:00–0:20] Open — brand + hook
+### [0:00–0:25] About me
 
 **ON SCREEN**  
 - Open https://pay-when-done.vercel.app/pitch  
-- Stay on the dark opening slide: **PayWhenDone**
+- Hold on **0 · About me**: founder photo, **Muhammad Umer Aamir**, PayWhenDone builder  
+- Optional: click **Open About** for 3 seconds, then back to `/pitch`
 
 **SAY**  
-> Hi — I’m demoing **PayWhenDone**, built for the PayPal AI Hackathon.  
-> It’s AI-verified PayPal escrow for local gigs hired off-platform — Facebook, Nextdoor, WhatsApp, word of mouth. Not a marketplace. Hold the money, prove the work, let Muse decide, then pay.
+> Hi — I’m Muhammad Umer Aamir, founder and builder of **PayWhenDone** for the PayPal AI Hackathon.  
+> It’s AI-verified PayPal escrow for local gigs hired off-platform — Facebook, Nextdoor, WhatsApp, word of mouth. I’m going to walk each screen with the seeded demo data.
 
 ---
 
-### [0:20–0:35] Problem
+### [0:25–0:45] Landing / problem
 
 **ON SCREEN**  
-- Advance `/pitch` to slide **1 · Problem** (“Off-platform gigs have no protection”)  
-- Hover the three bullets briefly; do not click away yet
+- Advance to **1 · Landing**  
+- Click **Open landing** or **How it works** briefly
 
 **SAY**  
-> Off-platform gigs have zero protection. Clients pay upfront and risk a ghost. Workers finish and wait for a Venmo that never lands. Photos in a chat are not a contract. PayWhenDone puts a PayPal hold and an AI verifier between them.
+> Off-platform gigs have zero protection. Clients pay upfront and risk a ghost. Workers finish and wait for a Venmo that never lands. PayWhenDone puts a PayPal hold and an AI verifier between them.
 
 ---
 
-### [0:35–0:55] Signup / email-first auth
+### [0:45–1:00] Templates + Ask AI
 
 **ON SCREEN**  
-- From the pitch slide, click **Log in** → `/login`  
-  *(or navigate directly to https://pay-when-done.vercel.app/login)*  
-- Type email: `umer@umer.com`  
-- Continue, then **sign in as demo admin** (password off-camera / already filled)  
-- Brief glance at header showing signed-in session (optional: `/account` for 2 seconds to show passkeys exist — don’t register a new one)
+- Advance to **2 · Templates** → **Open Templates**  
+- Show catalog filters; scroll to **Ask AI** once
 
 **SAY**  
-> Auth is email-first. Login asks for email, checks for a passkey, then offers password or WebAuthn — no clutter. I’m signing in as the demo admin with umer@umer.com. Protected routes — jobs, create, admin — sit behind this session.
+> Twenty-four ready briefs — or Ask AI drafts a custom template from a plain-language description, then prefills create.
 
 ---
 
-### [0:55–1:35] Create job wizard
+### [1:00–1:35] Create job wizard
 
 **ON SCREEN**  
-- Go to https://pay-when-done.vercel.app/create  
-- **Step Template:** click a template (e.g. Cleaning or Handyman) → **Continue**  
-- **Step Details:** point at title, brief/acceptance criteria, amount → **Continue**  
-- **Step People:** show client + worker name/email (defaults are fine) → **Continue**  
-- **Step Payment:** leave **Auto PayPal payout to worker on release** on → **Continue**  
-- **Step Review:** scan summary → click **Create escrow job** (or equivalent primary CTA)  
-- Land on `/jobs/[id]`
+- `/create` — template → details → people → PayPal options → review  
+- Or stay on the pitch step and point at the CTA, then jump to a seeded job if short on time
 
 **SAY**  
-> Creating an escrow is a five-step wizard: template, details, people, PayPal options, review. The brief here is what Muse will judge later — clear acceptance criteria, not vibes. Auto-payout on release means once we capture, the worker can get settled through PayPal. Confirm… and we’re in the job workspace.
+> Creating an escrow is a five-step wizard. The brief here is what Muse will judge later — clear acceptance criteria, not vibes.
 
 ---
 
-### [1:35–1:55] PayPal hold (AUTHORIZE)
+### [1:35–1:50] Jobs list
 
 **ON SCREEN**  
-- On the job Flow tab: section **1. Client holds funds**  
-- Click the fund / PayPal authorize button (`PayPalFundButton`)  
-- Complete sandbox/mock authorize if prompted  
-- Wait until status shows **funded** (hold active)
+- `/jobs` with seeded board (signed in as umer@umer.com)  
+- Point at funded / disputed / released rows
 
 **SAY**  
-> Client funds with PayPal intent **AUTHORIZE** — reserve, don’t capture. Money sits on hold until Muse approves or we void. Sandbox when keys are set; mock authorize when they’re not. Either way, the escrow state machine is live.
+> The pitch seed fills a full ops board — holds, Muse verdicts, disputes, releases — owned by the demo admin.
 
 ---
 
-### [1:55–2:15] Worker proof
+### [1:50–2:40] Escrow flow
 
 **ON SCREEN**  
-- Section **2. Worker submits proof**  
-- Choose a proof photo from disk  
-- Type short notes that map to the brief (e.g. “Kitchen counters wiped, floor mopped, before/after in frame”)  
-- Click **Submit proof**  
-- Status → **proof_submitted**
+- From pitch **5 · Escrow flow**, click **Open escrow job** → Studio move seed  
+- Flow tab: hold → proof → Muse → release (or narrate status if already `ai_approved`)
 
 **SAY**  
-> Worker uploads a photo and notes that map back to the brief. This is the evidence — not a promise in a group chat. Submit proof.
+> One job end-to-end: AUTHORIZE hold, worker proof, Muse Spark verdict, then capture or void. Verdict gates the money.
 
 ---
 
-### [2:15–2:40] Muse AI verify
+### [2:40–3:00] PayPal panel
 
 **ON SCREEN**  
-- Section **3. Run Muse verification**  
-- Click **Verify with Muse AI**  
-- Wait for verdict panel: Approved/Rejected · confidence · matched / missing  
-- Pause on the verdict long enough to read confidence %
+- Tutoring seed or Admin ledger — show order / auth / capture / payout IDs
 
 **SAY**  
-> Muse Spark compares the image and notes to the acceptance criteria. We get approved or rejected, a confidence score, what matched, and what’s still missing. That verdict gates the money — capture only when the work checks out.
+> Every money event leaves sandbox-shaped PayPal IDs on the job — the same shapes Admin ledger and webhooks show.
 
 ---
 
-### [2:40–3:00] Capture or void
+### [3:00–3:15] Disputes & milestones
 
 **ON SCREEN**  
-- If **Approved:** click **Release PayPal payment** → show **Payment released** + capture id  
-- *Optional 5-second aside (only if you have a second funded job):* open it and point at **Void hold** without confirming, or void a disposable job to show the cancel path  
-- Do **not** dwell on both paths; prioritize capture for the happy path
+- Deck railing dispute thread; optional bathroom milestones
 
 **SAY**  
-> On approval, we capture the authorization — PayPal takes the funds and the job moves to released. If Muse rejects or the gig dies, we void the hold so the client is never charged. Capture and void are first-class PayPal payment actions, not a fake toggle.
+> Real gigs go sideways — dispute notes stay on the job, and milestones split larger work without inventing a marketplace.
 
 ---
 
-### [3:00–3:20] Invoice & payout
+### [3:15–3:35] Admin
 
 **ON SCREEN**  
-- From the released job, briefly show success panel / receipt link if visible  
-- Navigate to https://pay-when-done.vercel.app/admin/payouts  
-- Optional: `/admin/invoices` or `/admin/ledger` for one beat each  
-- Optional: open `/receipt/[id]` if you copied the job id
+- `/admin` KPIs → sidebar **Ledger** or **Jobs** once
 
 **SAY**  
-> Settlement sits on top of capture: PayPal invoice for the record, payout to the worker email, and ledger rows for every money event. Auto-payout was on when we created the job, so release can push settlement without a second marketplace hop.
+> Admin is the ops view — escrows, ledger, invoices, payouts, webhooks. Live counts for holds and released funds.
 
 ---
 
-### [3:20–3:40] Admin console
+### [3:35–3:45] Account / passkeys
 
 **ON SCREEN**  
-- Go to https://pay-when-done.vercel.app/admin  
-- Pan KPIs: jobs, active holds, funds held, released  
-- Click sidebar once: **Ledger** or **Webhooks** → back to overview  
-- Optional: mention CSV export exists at `/api/jobs/export` without downloading
+- `/account` for ~5 seconds — mention optional passkey, don’t register on camera
 
 **SAY**  
-> Admin is the ops view judges expect after the happy path — escrows, ledger, invoices, payouts, webhooks. Live counts for holds and released funds. Pitch mode lives here too for stage demos.
+> Auth is email-first; passkeys are optional on Account after signup — no clutter on the login form.
 
 ---
 
-### [3:40–4:00] Close / founder + ask
+### [3:45–4:00] Close
 
 **ON SCREEN**  
-- Go to https://pay-when-done.vercel.app/about  
-- Hold on founder photo + bio (Muhammad Umer Aamir)  
-- Optional: jump back to `/pitch` last slide (**11 · Close**) and leave CTAs visible: About · Live Jobs · GitHub  
+- `/pitch` last slide or live `/jobs`  
 - End frame: live URL in the address bar
 
 **SAY**  
-> I’m Muhammad Umer Aamir — MAC student at Wilfrid Laurier. PayWhenDone is the full loop: PayPal AUTHORIZE, Muse verify, capture or void, payout, and admin — shipping as a working demo at pay-when-done.vercel.app.  
+> PayWhenDone is the full loop: PayPal AUTHORIZE, Muse verify, capture or void, payout, and admin — live at pay-when-done.vercel.app.  
 >  
-> **Judges: if you hire off-platform, you deserve escrow that only pays when the work is done. Try the live app, create a job, and release a hold — thank you.**
+> **Judges: if you hire off-platform, you deserve escrow that only pays when the work is done. Try the live app — thank you.**
 
 ---
 
 ## One-page cheat card (print / second monitor)
 
 ```
-/pitch → problem
+/pitch  → 0 About me → landing → templates → create → jobs
+        → escrow (Studio move) → PayPal IDs → disputes → admin → account → close
 /login  umer@umer.com  (demo admin, password off-cam)
-/create template → details → people → payment → review
 /jobs/:id  Fund (AUTHORIZE) → Proof → Muse → Release
-/admin/payouts  →  /admin  →  /about
+/admin  →  /about
 Close: “Try the live app… thank you.”
 ```
 
@@ -236,7 +213,8 @@ Close: “Try the live app… thank you.”
 - **Slow Muse / mock:** “When Muse is offline we fall back to a deterministic verifier so the demo never dies.”  
 - **PayPal sandbox delay:** “Authorize is a real Orders v2 hold when sandbox keys are present.”  
 - **Empty admin:** “I’ll seed from Admin so you can see ledger and webhook activity.”  
-- **Skip void:** “Void is one click on any funded job — same workspace as capture.”
+- **Skip void:** “Void is one click on any funded job — same workspace as capture.”  
+- **Not signed in on pitch:** “Sign in as the demo admin to deep-link seeded jobs and load live KPIs.”
 
 ## Do / don’t
 
@@ -255,4 +233,4 @@ Close: “Try the live app… thank you.”
 
 ## Suggested YouTube / Devpost blurb
 
-> PayWhenDone — AI-verified PayPal escrow for off-platform gigs. Client AUTHORIZE hold → worker proof → Muse Spark verify → capture or void → optional payout. Live: https://pay-when-done.vercel.app · Pitch: /pitch · GitHub: umeraamir69/pay-when-done
+> PayWhenDone — AI-verified PayPal escrow for off-platform gigs. Client AUTHORIZE hold → worker proof → Muse Spark verify → capture or void → optional payout. Live: https://pay-when-done.vercel.app · Pitch: /pitch (starts with About me) · GitHub: umeraamir69/pay-when-done

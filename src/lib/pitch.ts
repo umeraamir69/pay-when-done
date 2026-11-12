@@ -2,18 +2,29 @@
 export const PITCH_MODE_KEY = "pwd_pitch_mode";
 
 export type PitchSlideId =
-  | "open"
-  | "problem"
-  | "signup"
+  | "about"
+  | "landing"
+  | "templates"
   | "create"
-  | "hold"
-  | "proof"
-  | "muse"
-  | "capture-void"
-  | "invoice-payout"
-  | "disputes-milestones"
+  | "jobs"
+  | "escrow"
+  | "paypal"
+  | "disputes"
   | "admin"
+  | "account"
   | "close";
+
+/** Which live/demo dataset to surface on a step. */
+export type PitchDataKind =
+  | "founder"
+  | "none"
+  | "templates"
+  | "jobs-list"
+  | "job-escrow"
+  | "job-paypal"
+  | "job-dispute"
+  | "admin"
+  | "account";
 
 export type PitchSlide = {
   id: PitchSlideId;
@@ -24,179 +35,224 @@ export type PitchSlide = {
   points?: string[];
   ctas?: Array<{ href: string; label: string; primary?: boolean }>;
   tone?: "default" | "dark" | "accent";
+  dataKind?: PitchDataKind;
+  /**
+   * When set, primary CTA is rewritten to `/jobs/:id` once the matching
+   * seeded job is loaded from the API.
+   */
+  jobMatch?: string;
 };
 
+/** Stable seed titles from prisma/seed.mjs — used to deep-link live demos. */
+export const PITCH_SEED = {
+  escrowTitle: "Studio move — 2 hours",
+  paypalTitle: "SAT math tutoring — 90 min",
+  disputeTitle: "Deck railing repair",
+  milestoneTitle: "Bathroom deep clean + grout",
+  templateCount: 24,
+} as const;
+
 /**
- * Full start→end demo story for live pitch mode.
- * Nav: Prev / Next buttons, ← → Space, Esc to exit.
+ * Guided screen walkthrough for live pitch mode.
+ * Starts with founder/About me, then each major product surface with its own data.
+ * Nav: Prev / Next, ← → Space, Esc to exit.
  */
 export const PITCH_SLIDES: PitchSlide[] = [
   {
-    id: "open",
-    eyebrow: "PayPal AI Hackathon",
-    title: "PayWhenDone",
-    body: "AI-verified PayPal escrow for local gigs hired off-platform — Facebook, Nextdoor, WhatsApp, word of mouth.",
-    tone: "dark",
-  },
-  {
-    id: "problem",
-    eyebrow: "1 · Problem",
-    title: "Off-platform gigs have no protection",
-    body: "The moment work is hired in a chat thread, trust breaks. There is no marketplace hold, no dispute button, no shared ground truth.",
+    id: "about",
+    eyebrow: "0 · About me",
+    title: "Muhammad Umer Aamir",
+    body: "Founder and builder of PayWhenDone — MAC student at Wilfrid Laurier. Full-stack TypeScript and Next.js; this is the PayPal AI Hackathon entry.",
     points: [
-      "Clients pay upfront and risk a ghost.",
-      "Workers finish the job and wait for Venmo that never arrives.",
-      "Photos in a group chat are not a contract.",
+      "Role: Founder · Umer Admin · PayWhenDone builder",
+      "Stack: Next.js, Neon Postgres, Better Auth, PayPal sandbox, Muse Spark",
+      "Demo login: umer@umer.com (admin allow-list)",
     ],
     ctas: [
-      { href: "/how-it-works", label: "How it works", primary: true },
+      { href: "/about", label: "Open About", primary: true },
+      {
+        href: "https://www.linkedin.com/in/umeraamir69/",
+        label: "LinkedIn",
+      },
+      {
+        href: "https://github.com/umeraamir69/pay-when-done",
+        label: "GitHub",
+      },
+    ],
+    tone: "dark",
+    dataKind: "founder",
+  },
+  {
+    id: "landing",
+    eyebrow: "1 · Landing",
+    title: "Problem → escrow solution",
+    body: "Off-platform gigs hired in chats have no hold and no shared ground truth. PayWhenDone is AI-verified PayPal escrow — not a marketplace.",
+    points: [
+      "Clients risk paying a ghost; workers wait on Venmo that never lands.",
+      "AUTHORIZE hold → proof → Muse verify → capture or void.",
+      "Hero + How it works tell the loop before you touch the wizard.",
+    ],
+    ctas: [
+      { href: "/", label: "Open landing", primary: true },
+      { href: "/how-it-works", label: "How it works" },
       { href: "/faq", label: "FAQ" },
     ],
+    dataKind: "none",
   },
   {
-    id: "signup",
-    eyebrow: "2 · Sign up",
-    title: "Email-first auth, optional passkey",
-    body: "Judges sign up with email + password. Login asks for email first, checks for a passkey, then offers password or WebAuthn — no passkey clutter on the form.",
+    id: "templates",
+    eyebrow: "2 · Templates",
+    title: "Catalog + Ask AI",
+    body: "Twenty-four ready briefs across cleaning, moving, tutoring, handyman, and creative — or ask AI to draft a custom template from a description.",
     points: [
-      "Better Auth email signup with confirm password.",
-      "After auth, Account can register an optional passkey.",
-      "Protected routes: jobs, create, account, admin.",
+      "Search and category filters on /templates.",
+      "Ask AI → /api/templates/generate → prefill create.",
+      "Each card deep-links into the create wizard.",
     ],
     ctas: [
-      { href: "/signup", label: "Sign up", primary: true },
-      { href: "/login", label: "Log in" },
-      { href: "/account", label: "Account / passkeys" },
+      { href: "/templates", label: "Open Templates", primary: true },
+      { href: "/templates#ask-ai", label: "Ask AI" },
+      { href: "/create?template=clean", label: "Start from Bathroom" },
     ],
+    dataKind: "templates",
   },
   {
     id: "create",
     eyebrow: "3 · Create job",
     title: "Multi-step escrow wizard",
-    body: "Walk template → details → people → PayPal options → review. Clear acceptance criteria become the brief Muse will judge later.",
+    body: "Template → details → people → PayPal options → review. Acceptance criteria become the brief Muse judges later.",
     points: [
-      "Start from a template or write a blank brief.",
-      "Amount, category, client + worker email on the record.",
-      "Review confirms everything before the PayPal hold screen.",
+      "Amount, category, client + worker on the record.",
+      "Optional auto-payout to worker on release.",
+      "Review confirms everything before the hold screen.",
     ],
     ctas: [
       { href: "/create", label: "New job", primary: true },
-      { href: "/templates", label: "Templates" },
+      { href: "/create?template=clean", label: "Wizard + template" },
     ],
+    dataKind: "none",
   },
   {
-    id: "hold",
-    eyebrow: "4 · PayPal hold",
-    title: "AUTHORIZE — reserve, don't capture",
-    body: "The client funds the job with PayPal intent AUTHORIZE. Money is reserved on their account but not taken yet. Sandbox when keys exist; mock authorize when they don't.",
+    id: "jobs",
+    eyebrow: "4 · Jobs list",
+    title: "Seeded demo board",
+    body: "Pitch seed loads a full ops board for umer@umer.com — funded holds, Muse verdicts, disputes, releases, voids.",
     points: [
-      "Hold sits on the job until Muse approves or the client voids.",
-      "Orders API + webhooks keep status in sync.",
-      "Open the job workspace to see the live escrow state.",
+      "Filters: status, category, search.",
+      "Owned by the demo admin so /api/jobs returns the set.",
+      "Open any row into the job workspace.",
     ],
     ctas: [
       { href: "/jobs", label: "Open Jobs", primary: true },
-      { href: "/create", label: "Create & fund" },
-      { href: "/docs/architecture", label: "State machine" },
+      { href: "/jobs?status=funded", label: "Funded only" },
     ],
+    dataKind: "jobs-list",
   },
   {
-    id: "proof",
-    eyebrow: "5 · Proof",
-    title: "Worker submits evidence",
-    body: "After the work is done, the worker uploads a photo and notes that map back to the acceptance criteria — the evidence Muse will judge.",
+    id: "escrow",
+    eyebrow: "5 · Escrow flow",
+    title: "Hold → proof → Muse → release",
+    body: "Walk one seeded job end-to-end: AUTHORIZE hold, worker proof, Muse Spark verdict, then capture or void.",
     points: [
-      "Photo + notes, not vibes or promises.",
-      "Available while the job is funded, rejected, or disputed.",
-      "Re-submit if Muse asks for clearer proof.",
-    ],
-    ctas: [{ href: "/jobs", label: "Jobs board", primary: true }],
-  },
-  {
-    id: "muse",
-    eyebrow: "6 · Muse verify",
-    title: "AI compares proof to the brief",
-    body: "Muse Spark reads image + notes against the job criteria and returns approved or rejected with confidence, matches, and what's still missing.",
-    points: [
-      "Meta Muse (`muse-spark-1.3`) when MODEL_API_KEY is set.",
-      "Graceful mock verdicts when Muse is offline — demo never dies.",
-      "Verdict gates the money action: capture vs hold/void.",
+      `Hero demo: “${PITCH_SEED.escrowTitle}” — Muse-approved, ready to release.`,
+      "Photo + notes map to acceptance criteria.",
+      "Verdict gates money: capture on approve, void on reject.",
     ],
     ctas: [
-      { href: "/jobs", label: "Try verify", primary: true },
-      { href: "/how-it-works", label: "How it works" },
+      { href: "/jobs", label: "Open escrow job", primary: true },
+      { href: "/how-it-works", label: "State machine" },
     ],
+    dataKind: "job-escrow",
+    jobMatch: PITCH_SEED.escrowTitle,
   },
   {
-    id: "capture-void",
-    eyebrow: "7 · Capture or void",
-    title: "Release payment — or cancel the hold",
-    body: "On Muse approval, capture the authorization and pay the worker. On rejection or a dead job, void the hold so the client is never charged.",
+    id: "paypal",
+    eyebrow: "6 · PayPal panel",
+    title: "Ledger-shaped IDs",
+    body: "Every money event leaves sandbox-shaped order, auth, capture, invoice, and payout IDs on the job — the same shapes Admin ledger and webhooks show.",
     points: [
-      "Capture → status released + PayPal capture id on the record.",
-      "Void → authorization cancelled; funds never leave the client.",
-      "Refund path available after capture when needed.",
-    ],
-    ctas: [{ href: "/jobs", label: "Open a funded job", primary: true }],
-  },
-  {
-    id: "invoice-payout",
-    eyebrow: "8 · Invoice & payout",
-    title: "PayPal invoice + worker payout",
-    body: "After release, optionally send a PayPal invoice for the record and push a payout to the worker — the settlement layer on top of capture.",
-    points: [
-      "Invoicing and payouts use sandbox PayPal APIs.",
-      "Receipt page shows the closed escrow for client and worker.",
-      "Ledger rows land in Admin for every money event.",
+      `Closed loop: “${PITCH_SEED.paypalTitle}” — captured + payout SUCCESS.`,
+      "AUTHORIZE reserves; capture takes; void never charges.",
+      "Pitch-seed IDs mock safely even when live keys are set.",
     ],
     ctas: [
-      { href: "/admin/invoices", label: "Invoices", primary: true },
-      { href: "/admin/payouts", label: "Payouts" },
+      { href: "/jobs", label: "Open PayPal job", primary: true },
       { href: "/admin/ledger", label: "Ledger" },
+      { href: "/admin/payouts", label: "Payouts" },
     ],
+    dataKind: "job-paypal",
+    jobMatch: PITCH_SEED.paypalTitle,
   },
   {
-    id: "disputes-milestones",
-    eyebrow: "9 · Edge cases",
-    title: "Disputes and milestones",
-    body: "Real gigs go sideways. A dispute thread lets client, worker, or admin leave notes. Milestones split larger jobs into titled amounts with their own status.",
+    id: "disputes",
+    eyebrow: "7 · Disputes & milestones",
+    title: "When gigs go sideways",
+    body: "Dispute threads keep client, worker, and admin notes on the job. Milestones split larger work into titled amounts with their own status.",
     points: [
-      "Opening a dispute marks the job disputed until resolved.",
-      "Milestones track partial delivery without inventing a marketplace.",
-      "Both live as tabs on the job workspace next to payments.",
+      `Open dispute: “${PITCH_SEED.disputeTitle}” — railing rework thread.`,
+      `Milestones: “${PITCH_SEED.milestoneTitle}” — bathrooms + grout.`,
+      "Both live as tabs beside the payment flow.",
     ],
-    ctas: [{ href: "/jobs", label: "Job workspace", primary: true }],
+    ctas: [
+      { href: "/jobs", label: "Open dispute job", primary: true },
+      { href: "/jobs?status=disputed", label: "Disputed filter" },
+    ],
+    dataKind: "job-dispute",
+    jobMatch: PITCH_SEED.disputeTitle,
   },
   {
     id: "admin",
-    eyebrow: "10 · Ops",
-    title: "Admin console",
-    body: "Escrows, ledger, invoices, payouts, webhooks, and CSV export — the ops view judges expect after the happy path.",
+    eyebrow: "8 · Admin",
+    title: "Ops console",
+    body: "Overview KPIs, jobs table, ledger, invoices, payouts, and webhook inbox — the view judges expect after the happy path.",
     points: [
-      "Live counts for jobs, active holds, funds held, and released.",
-      "Webhook inbox for PayPal event verification.",
+      "Live counts: jobs, active holds, funds held, released.",
+      "CSV export and webhook verification for sandbox events.",
       "Pitch lives in the admin sidebar for stage demos.",
     ],
     ctas: [
-      { href: "/admin", label: "Open Admin", primary: true },
+      { href: "/admin", label: "Admin overview", primary: true },
+      { href: "/admin/jobs", label: "Jobs" },
+      { href: "/admin/ledger", label: "Ledger" },
       { href: "/admin/webhooks", label: "Webhooks" },
-      { href: "/jobs", label: "Jobs board" },
     ],
+    dataKind: "admin",
+  },
+  {
+    id: "account",
+    eyebrow: "9 · Account",
+    title: "Email-first + optional passkeys",
+    body: "Login is email-first: check for a passkey, then password or WebAuthn. Account can register an optional passkey after signup — no clutter on the forms.",
+    points: [
+      "Better Auth email signup with confirm password.",
+      "Protected routes: jobs, create, account, admin.",
+      "Demo admin: umer@umer.com on the allow-list.",
+    ],
+    ctas: [
+      { href: "/account", label: "Open Account", primary: true },
+      { href: "/login", label: "Log in" },
+    ],
+    dataKind: "account",
   },
   {
     id: "close",
-    eyebrow: "11 · Close",
-    title: "Muhammad Umer Aamir",
-    body: "MAC student at Wilfrid Laurier. Full-stack TypeScript and Next.js — PayWhenDone is the hackathon entry: escrow rails, Muse verification, and passkeys in one working demo.",
+    eyebrow: "10 · Close",
+    title: "Try the live loop",
+    body: "Hold → prove → Muse → pay. Judges: create a job, fund a hold, and release when the work checks out.",
+    points: [
+      "Live: pay-when-done.vercel.app",
+      "Pitch: /pitch · About: /about · Jobs: /jobs",
+    ],
     ctas: [
-      { href: "/about", label: "About", primary: true },
-      { href: "/jobs", label: "Live Jobs" },
+      { href: "/jobs", label: "Live Jobs", primary: true },
+      { href: "/about", label: "About" },
       {
         href: "https://github.com/umeraamir69/pay-when-done",
         label: "GitHub",
       },
     ],
     tone: "accent",
+    dataKind: "none",
   },
 ];
 

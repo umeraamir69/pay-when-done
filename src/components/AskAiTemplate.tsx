@@ -55,7 +55,7 @@ export function AskAiTemplate() {
   }
 
   return (
-    <FadeIn className="ask-ai-template panel">
+    <FadeIn id="ask-ai" className="ask-ai-template panel">
       <div className="ask-ai-template-head">
         <div>
           <p className="eyebrow">Ask AI</p>

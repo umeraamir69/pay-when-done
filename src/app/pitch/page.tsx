@@ -4,7 +4,7 @@ import { PitchDeck } from "@/components/PitchDeck";
 export const metadata: Metadata = {
   title: "Pitch",
   description:
-    "Full PayWhenDone pitch: problem → signup → create → hold → proof → Muse → release → payout → disputes → admin → close.",
+    "Guided PayWhenDone pitch: About me → landing → templates → create → jobs → escrow → PayPal → disputes → admin → account → close.",
   robots: { index: false, follow: false },
 };
 
